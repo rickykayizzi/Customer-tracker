@@ -95,7 +95,7 @@
     <label>IMEI</label>
     <input type="text" id="custIMEI" placeholder="Scan or enter IMEI"/>
     <button onclick="startScanner()">📷 Scan Barcode</button>
-    <div id="qr-reader"></div>
+ <div id="qr-reader" style="width:100%; max-width:400px; height:100px; margin:15px 0;"></div>
 
     <label>Date Received</label>
     <input type="date" id="custDate"/>
@@ -157,18 +157,16 @@
 
     function startScanner() {
       const html5QrCode = new Html5Qrcode("qr-reader");
-      html5QrCode.start(
-        { facingMode: "environment" },
-        { fps: 10, qrbox: 250 },
-        qrCodeMessage => {
-          document.getElementById("custIMEI").value = qrCodeMessage;
-          html5QrCode.stop();
-          document.getElementById("qr-reader").style.display = "none";
-        },
-        errorMessage => {
-          console.log(errorMessage);
-        }
-      );
+html5QrCode.start(
+  { facingMode: "environment" },
+  { fps: 10, qrbox: { width: 360, height: 80 } }, // rectangle
+  qrCodeMessage => {
+    document.getElementById("custIMEI").value = qrCodeMessage;
+    html5QrCode.stop();
+    document.getElementById("qr-reader").style.display = "none";
+  },
+  errorMessage => { console.log(errorMessage); }
+);
       document.getElementById("qr-reader").style.display = "block";
     }
 
