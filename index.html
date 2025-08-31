@@ -41,11 +41,11 @@ th { background:#1a73e8; }
 
 <!-- Splash screen -->
 <div class="splash">
-  <div style="font-size:3rem; font-weight:bold;">🔥 KAYIZZI’S 🧠</div>
+  <div style="font-size:3rem; font-weight:bold;"> KAYIZZI’S </div>
   <div style="margin-top:12px; font-size:1.2rem;">Customer Tracker</div>
   <div class="flame" style="left:40%; animation-delay:0s;"></div>
   <div class="flame" style="left:50%; animation-delay:0.5s;"></div>
-  <div class="flame" style="left:60%; animation-delay:1s;"></div>
+  <div class="flame" style="left:60%; animation-delay:2s;"></div>
 </div>
 
 <header>📊 Customer Data Tracker</header>
@@ -57,7 +57,6 @@ th { background:#1a73e8; }
 <input type="password" id="login-password" placeholder="Password"/>
 <button onclick="login()">Login</button>
 <button onclick="signup()">Sign Up</button>
-<button onclick="guestLogin()">Continue as Guest</button>
 </div>
 
 <!-- App -->
@@ -83,8 +82,8 @@ th { background:#1a73e8; }
 </select>
 
 <button onclick="addEntry()">➕ Add Entry</button>
-<button onclick="exportCSV()">📂 Export CSV</button>
 <button onclick="exportPDF()">📑 Export PDF</button>
+<button onclick="clearData()">🗑 Clear Data</button>
 <button onclick="logout()">Logout</button>
 
 <label>Filter by Name/Number</label>
@@ -122,8 +121,7 @@ function signup() {
   const pass=document.getElementById("login-password").value;
   auth.createUserWithEmailAndPassword(email,pass).then(()=>initApp()).catch(e=>alert(e.message));
 }
-function guestLogin() { auth.currentUser={email:"guest@example.com"}; initApp(); }
-function logout() { if(auth.signOut){ auth.signOut().then(()=>location.reload()); } else { location.reload(); }}
+function logout() { auth.signOut().then(()=>location.reload()); }
 
 // ===== Initialize App =====
 function initApp(){
@@ -142,8 +140,12 @@ function addEntry(){
   if(!name||!number||number.length!==10){ alert("Enter valid data."); return; }
   const promoter=auth.currentUser.email;
   db.collection("customers").add({name,number,imei,date,offer,promoter})
-  .then(()=>{ document.getElementById("custName").value=""; document.getElementById("custNumber").value=""; document.getElementById("custIMEI").value=""; document.getElementById("custDate").value=""; })
-  .catch(e=>console.log(e));
+  .then(()=>{ 
+    document.getElementById("custName").value="";
+    document.getElementById("custNumber").value="";
+    document.getElementById("custIMEI").value="";
+    document.getElementById("custDate").value="";
+  }).catch(e=>console.log(e));
 }
 
 // ===== Load Entries =====
@@ -182,18 +184,6 @@ function startScanner(){
   );
 }
 
-// ===== Export CSV =====
-function exportCSV(){
-  let rows=[["Name","Number","IMEI","Date","Offer","Promoter"]];
-  document.querySelectorAll("#dataTable tbody tr").forEach(tr=>rows.push([...tr.children].map(td=>td.innerText)));
-  let csv=rows.map(r=>r.join(",")).join("\n");
-  let blob=new Blob([csv],{type:"text/csv"});
-  let link=document.createElement("a");
-  link.href=URL.createObjectURL(blob);
-  link.download="customers.csv";
-  link.click();
-}
-
 // ===== Export PDF =====
 async function exportPDF(){
   const { jsPDF }=window.jspdf;
@@ -205,6 +195,15 @@ async function exportPDF(){
     doc.text(row,20,y); y+=10;
   });
   doc.save("customers.pdf");
+}
+
+// ===== Clear Data =====
+function clearData(){
+  if(confirm("Are you sure you want to delete all customer data? This cannot be undone.")){
+    db.collection("customers").get().then(snapshot=>{
+      snapshot.forEach(doc=>{ db.collection("customers").doc(doc.id).delete(); });
+    });
+  }
 }
 
 // ===== Filter Table =====
