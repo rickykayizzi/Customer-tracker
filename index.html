@@ -77,7 +77,7 @@
 <body>
   <!-- Splash screen -->
   <div class="splash">
-    <div style="font-size:3rem; font-weight:bold;">🔥 KAYIZZI’S 🧠</div>
+    <div style="font-size:3rem; font-weight:bold;"> KAYIZZI’S </div>
     <div style="margin-top:12px; font-size:1.2rem;">Customer Tracker</div>
     <div class="flame" style="left:40%; animation-delay:0s;"></div>
     <div class="flame" style="left:50%; animation-delay:0.5s;"></div>
@@ -95,7 +95,7 @@
     <label>IMEI</label>
     <input type="text" id="custIMEI" placeholder="Scan or enter IMEI"/>
     <button onclick="startScanner()">📷 Scan Barcode</button>
- <div id="qr-reader" style="width:100%; max-width:220px; height:10px; margin:15px 0;"></div>
+ <div id="qr-reader" style="width:100%; max-width:220px; height:1px; margin:15px 0;"></div>
 
     <label>Date Received</label>
     <input type="date" id="custDate"/>
@@ -159,7 +159,7 @@
       const html5QrCode = new Html5Qrcode("qr-reader");
 html5QrCode.start(
   { facingMode: "environment" },
-  { fps: 10, qrbox: { width: 10, height: 25 } }, // rectangle
+  { fps: 10, qrbox: { width: 10, height: 2 } }, // rectangle
   qrCodeMessage => {
     document.getElementById("custIMEI").value = qrCodeMessage;
     html5QrCode.stop();
