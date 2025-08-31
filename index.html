@@ -5,26 +5,50 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Team Customer Tracker</title>
 <meta name="theme-color" content="#0a2a43"/>
+
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
 <!-- QR Scanner -->
 <script src="https://unpkg.com/html5-qrcode"></script>
+
 <!-- jsPDF -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
 <style>
 body { margin:0; font-family:"Segoe UI", sans-serif; background:#0a2a43; color:#fff; }
+header { text-align:center; font-size:1.4rem; font-weight:bold; padding:15px; background:linear-gradient(90deg,#0d3d66,#0a2a43); }
 .container { padding:20px; max-width:400px; margin:auto; }
-input, select, button { width:100%; padding:10px; margin:6px 0; border-radius:6px; border:none; }
+input, select, button { width:100%; padding:10px; margin:6px 0; border-radius:6px; border:none; font-size:1rem; }
 button { background:#1a73e8; color:#fff; cursor:pointer; font-weight:bold; }
 table { width:100%; margin-top:15px; border-collapse:collapse; }
 th, td { padding:8px; border:1px solid #fff; text-align:left; }
 th { background:#1a73e8; }
-#qr-reader { width:100%; height:30px; display:none; margin:5px 0; }
+#qr-reader { display:none; height:2rem; }
+.splash {
+  position:fixed; top:0; left:0; right:0; bottom:0;
+  background:#0a2a43; display:flex; align-items:center; justify-content:center; flex-direction:column;
+  z-index:1000; color:#fff; font-size:2rem; animation:fadeout 1.2s ease 2.5s forwards;
+}
+@keyframes fadeout { to { opacity:0; visibility:hidden; } }
+.flame { position:absolute; width:8px; height:8px; background:#1a73e8; border-radius:50%; animation:fly 3s infinite linear; }
+@keyframes fly { from { transform: translateY(0) scale(1); opacity:1; } to { transform: translateY(-200px) scale(0.3); opacity:0; } }
 </style>
 </head>
 <body>
+
+<!-- Splash screen -->
+<div class="splash">
+  <div style="font-size:3rem; font-weight:bold;">🔥 KAYIZZI’S 🧠</div>
+  <div style="margin-top:12px; font-size:1.2rem;">Customer Tracker</div>
+  <div class="flame" style="left:40%; animation-delay:0s;"></div>
+  <div class="flame" style="left:50%; animation-delay:0.5s;"></div>
+  <div class="flame" style="left:60%; animation-delay:1s;"></div>
+</div>
+
+<header>📊 Customer Data Tracker</header>
 
 <!-- Login -->
 <div class="container" id="login-container">
@@ -38,8 +62,6 @@ th { background:#1a73e8; }
 
 <!-- App -->
 <div class="container" id="app-container" style="display:none;">
-<h2>Team Customer Tracker</h2>
-
 <label>Customer Name</label>
 <input type="text" id="custName" placeholder="Enter customer name"/>
 
@@ -47,8 +69,8 @@ th { background:#1a73e8; }
 <input type="number" id="custNumber" placeholder="10-digit MTN number"/>
 
 <label>IMEI</label>
-<input type="text" id="custIMEI" placeholder="Scan or enter IMEI"/>
-<button onclick="startScanner()">📷 Scan Barcode</button>
+<input type="text" id="custIMEI" placeholder="Scan or enter IMEI" maxlength="14" style="height:2rem; font-size:1rem;"/>
+<button onclick="startScanner()">📷 Scan</button>
 <div id="qr-reader"></div>
 
 <label>Date Received</label>
@@ -65,16 +87,17 @@ th { background:#1a73e8; }
 <button onclick="exportPDF()">📑 Export PDF</button>
 <button onclick="logout()">Logout</button>
 
+<label>Filter by Name/Number</label>
+<input type="text" id="filterBox" onkeyup="filterTable()" placeholder="Type to filter..."/>
+
 <table id="dataTable">
-<thead>
-<tr><th>Name</th><th>Number</th><th>IMEI</th><th>Date</th><th>Offer</th><th>Promoter</th></tr>
-</thead>
+<thead><tr><th>Name</th><th>Number</th><th>IMEI</th><th>Date</th><th>Offer</th><th>Promoter</th></tr></thead>
 <tbody></tbody>
 </table>
 </div>
 
 <script>
-// ====== Firebase Config ======
+// ===== Firebase Config =====
 const firebaseConfig = {
   apiKey: "AIzaSyCQyyaaoa-QIjPQ9UfHJXEwWAfCKPKc-u0",
   authDomain: "customer-follow-up-7ab17.firebaseapp.com",
@@ -88,72 +111,51 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-// ====== Login & Signup ======
+// ===== Login/Signup =====
 function login() {
-  const email = document.getElementById("login-email").value;
-  const pass = document.getElementById("login-password").value;
-  auth.signInWithEmailAndPassword(email, pass)
-  .then(() => initApp())
-  .catch(e => alert(e.message));
+  const email=document.getElementById("login-email").value;
+  const pass=document.getElementById("login-password").value;
+  auth.signInWithEmailAndPassword(email,pass).then(()=>initApp()).catch(e=>alert(e.message));
 }
-
 function signup() {
-  const email = document.getElementById("login-email").value;
-  const pass = document.getElementById("login-password").value;
-  auth.createUserWithEmailAndPassword(email, pass)
-  .then(() => initApp())
-  .catch(e => alert(e.message));
+  const email=document.getElementById("login-email").value;
+  const pass=document.getElementById("login-password").value;
+  auth.createUserWithEmailAndPassword(email,pass).then(()=>initApp()).catch(e=>alert(e.message));
 }
+function guestLogin() { auth.currentUser={email:"guest@example.com"}; initApp(); }
+function logout() { if(auth.signOut){ auth.signOut().then(()=>location.reload()); } else { location.reload(); }}
 
-// ====== Guest Login ======
-function guestLogin() {
-  auth.currentUser = { email: "guest@example.com" };
-  initApp();
-}
-
-// ====== Logout ======
-function logout() {
-  if(auth.signOut) { auth.signOut().then(()=>location.reload()); } 
-  else { location.reload(); }
-}
-
-// ====== Initialize App ======
-function initApp() {
-  document.getElementById("login-container").style.display = "none";
-  document.getElementById("app-container").style.display = "block";
+// ===== Initialize App =====
+function initApp(){
+  document.getElementById("login-container").style.display="none";
+  document.getElementById("app-container").style.display="block";
   loadEntries();
 }
 
-// ====== Add Customer Entry ======
-function addEntry() {
-  const name = document.getElementById("custName").value.trim();
-  const number = document.getElementById("custNumber").value.trim();
-  const imei = document.getElementById("custIMEI").value.trim();
-  const date = document.getElementById("custDate").value;
-  const offer = document.getElementById("custOffer").value;
-  if(!name || !number || number.length !== 10){ alert("Enter valid data."); return; }
-
-  const promoter = auth.currentUser.email;
-  db.collection("customers").add({name, number, imei, date, offer, promoter})
-  .then(()=>{
-    document.getElementById("custName").value="";
-    document.getElementById("custNumber").value="";
-    document.getElementById("custIMEI").value="";
-    document.getElementById("custDate").value="";
-  })
+// ===== Add Entry =====
+function addEntry(){
+  const name=document.getElementById("custName").value.trim();
+  const number=document.getElementById("custNumber").value.trim();
+  const imei=document.getElementById("custIMEI").value.trim();
+  const date=document.getElementById("custDate").value;
+  const offer=document.getElementById("custOffer").value;
+  if(!name||!number||number.length!==10){ alert("Enter valid data."); return; }
+  const promoter=auth.currentUser.email;
+  db.collection("customers").add({name,number,imei,date,offer,promoter})
+  .then(()=>{ document.getElementById("custName").value=""; document.getElementById("custNumber").value=""; document.getElementById("custIMEI").value=""; document.getElementById("custDate").value=""; })
   .catch(e=>console.log(e));
 }
 
-// ====== Load Entries ======
-function loadEntries() {
-  const tbody = document.querySelector("#dataTable tbody");
+// ===== Load Entries =====
+function loadEntries(){
+  const tbody=document.querySelector("#dataTable tbody");
   tbody.innerHTML="";
   db.collection("customers").orderBy("date","desc")
   .onSnapshot(snapshot=>{
     tbody.innerHTML="";
     snapshot.forEach(doc=>{
       const data=doc.data();
-      const row = `<tr>
+      const row=`<tr>
         <td>${data.name}</td>
         <td>${data.number}</td>
         <td>${data.imei}</td>
@@ -161,45 +163,41 @@ function loadEntries() {
         <td>${data.offer}</td>
         <td>${data.promoter}</td>
       </tr>`;
-      tbody.insertAdjacentHTML("beforeend", row);
+      tbody.insertAdjacentHTML("beforeend",row);
     });
   });
 }
 
-// ====== QR Scanner ======
-function startScanner() {
-  const html5QrCode = new Html5Qrcode("qr-reader");
+// ===== QR Scanner =====
+function startScanner(){
+  const html5QrCode=new Html5Qrcode("custIMEI"); 
   html5QrCode.start(
-    { facingMode: "environment" },
-    { fps: 10, qrbox: { width:200, height:25 } },
+    {facingMode:"environment"},
+    {fps:10, qrbox:{width:1,height:1}},
     qrCodeMessage=>{
-      document.getElementById("custIMEI").value = qrCodeMessage;
+      document.getElementById("custIMEI").value=qrCodeMessage.slice(0,14);
       html5QrCode.stop();
-      document.getElementById("qr-reader").style.display = "none";
     },
     errorMessage=>{ console.log(errorMessage); }
   );
-  document.getElementById("qr-reader").style.display="block";
 }
 
-// ====== Export CSV ======
-function exportCSV() {
+// ===== Export CSV =====
+function exportCSV(){
   let rows=[["Name","Number","IMEI","Date","Offer","Promoter"]];
-  document.querySelectorAll("#dataTable tbody tr").forEach(tr=>{
-    rows.push([...tr.children].map(td=>td.innerText));
-  });
-  let csv = rows.map(r=>r.join(",")).join("\n");
-  let blob = new Blob([csv], {type:"text/csv"});
-  let link = document.createElement("a");
-  link.href = URL.createObjectURL(blob);
+  document.querySelectorAll("#dataTable tbody tr").forEach(tr=>rows.push([...tr.children].map(td=>td.innerText)));
+  let csv=rows.map(r=>r.join(",")).join("\n");
+  let blob=new Blob([csv],{type:"text/csv"});
+  let link=document.createElement("a");
+  link.href=URL.createObjectURL(blob);
   link.download="customers.csv";
   link.click();
 }
 
-// ====== Export PDF ======
-async function exportPDF() {
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
+// ===== Export PDF =====
+async function exportPDF(){
+  const { jsPDF }=window.jspdf;
+  const doc=new jsPDF();
   doc.text("Customer Data",20,20);
   let y=30;
   document.querySelectorAll("#dataTable tbody tr").forEach(tr=>{
@@ -208,6 +206,15 @@ async function exportPDF() {
   });
   doc.save("customers.pdf");
 }
+
+// ===== Filter Table =====
+function filterTable(){
+  const q=document.getElementById("filterBox").value.toLowerCase();
+  document.querySelectorAll("#dataTable tbody tr").forEach(tr=>{
+    tr.style.display=tr.innerText.toLowerCase().includes(q)?"":"none";
+  });
+}
 </script>
+
 </body>
 </html>
