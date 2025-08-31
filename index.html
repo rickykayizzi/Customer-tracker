@@ -26,7 +26,7 @@ button { background:#1a73e8; color:#fff; cursor:pointer; font-weight:bold; }
 table { width:100%; margin-top:15px; border-collapse:collapse; }
 th, td { padding:8px; border:1px solid #fff; text-align:left; }
 th { background:#1a73e8; }
-#qr-reader { display:none; height:2rem; }
+#qr-reader { display:none; height:2rem; width:100%; margin:4px 0; }
 .splash {
   position:fixed; top:0; left:0; right:0; bottom:0;
   background:#0a2a43; display:flex; align-items:center; justify-content:center; flex-direction:column;
@@ -68,14 +68,16 @@ th { background:#1a73e8; }
 <input type="number" id="custNumber" placeholder="10-digit MTN number"/>
 
 <label>IMEI</label>
-<input type="text" id="custIMEI" placeholder="Scan or enter IMEI" maxlength="14" style="height:2rem; font-size:1rem;"/>
-<button onclick="startScanner()">📷 Scan</button>
+<div style="display:flex; gap:4px;">
+  <input type="text" id="custIMEI" placeholder="Scan or enter IMEI" maxlength="14" style="flex:1; height:2rem; font-size:1rem;"/>
+  <button style="flex:none;" onclick="startScanner()">📷</button>
+</div>
 <div id="qr-reader"></div>
 
 <label>Date</label>
 <input type="date" id="custDate"/>
 
-<label>Got Data ?</label>
+<label>Got Data?</label>
 <select id="custOffer">
 <option value="Yes">Yes</option>
 <option value="No">No</option>
@@ -111,24 +113,31 @@ const auth = firebase.auth();
 const db = firebase.firestore();
 
 // ===== Login/Signup =====
-function login() {
+function login(){
   const email=document.getElementById("login-email").value;
   const pass=document.getElementById("login-password").value;
-  auth.signInWithEmailAndPassword(email,pass).then(()=>initApp()).catch(e=>alert(e.message));
+  auth.signInWithEmailAndPassword(email,pass)
+  .catch(e=>alert(e.message));
 }
-function signup() {
+function signup(){
   const email=document.getElementById("login-email").value;
   const pass=document.getElementById("login-password").value;
-  auth.createUserWithEmailAndPassword(email,pass).then(()=>initApp()).catch(e=>alert(e.message));
+  auth.createUserWithEmailAndPassword(email,pass)
+  .catch(e=>alert(e.message));
 }
-function logout() { auth.signOut().then(()=>location.reload()); }
+function logout(){ auth.signOut(); }
 
-// ===== Initialize App =====
-function initApp(){
-  document.getElementById("login-container").style.display="none";
-  document.getElementById("app-container").style.display="block";
-  loadEntries();
-}
+// ===== Auth state =====
+auth.onAuthStateChanged(user=>{
+  if(user){
+    document.getElementById("login-container").style.display="none";
+    document.getElementById("app-container").style.display="block";
+    loadEntries(user.email);
+  }else{
+    document.getElementById("login-container").style.display="block";
+    document.getElementById("app-container").style.display="none";
+  }
+});
 
 // ===== Add Entry =====
 function addEntry(){
@@ -140,7 +149,7 @@ function addEntry(){
   if(!name||!number||number.length!==10){ alert("Enter valid data."); return; }
   const promoter=auth.currentUser.email;
   db.collection("customers").add({name,number,imei,date,offer,promoter})
-  .then(()=>{ 
+  .then(()=>{
     document.getElementById("custName").value="";
     document.getElementById("custNumber").value="";
     document.getElementById("custIMEI").value="";
@@ -149,10 +158,9 @@ function addEntry(){
 }
 
 // ===== Load Entries =====
-function loadEntries(){
+function loadEntries(userEmail){
   const tbody=document.querySelector("#dataTable tbody");
-  tbody.innerHTML="";
-  db.collection("customers").orderBy("date","desc")
+  db.collection("customers").where("promoter","==",userEmail).orderBy("date","desc")
   .onSnapshot(snapshot=>{
     tbody.innerHTML="";
     snapshot.forEach(doc=>{
@@ -172,16 +180,17 @@ function loadEntries(){
 
 // ===== QR Scanner =====
 function startScanner(){
-  const html5QrCode=new Html5Qrcode("custIMEI"); 
+  const html5QrCode=new Html5Qrcode("qr-reader");
   html5QrCode.start(
     {facingMode:"environment"},
-    {fps:10, qrbox:{width:1,height:1}},
+    {fps:10, qrbox:250},
     qrCodeMessage=>{
       document.getElementById("custIMEI").value=qrCodeMessage.slice(0,14);
-      html5QrCode.stop();
+      html5QrCode.stop().then(()=>document.getElementById("qr-reader").style.display="none");
     },
-    errorMessage=>{ console.log(errorMessage); }
+    errorMessage=>console.log(errorMessage)
   );
+  document.getElementById("qr-reader").style.display="block";
 }
 
 // ===== Export PDF =====
@@ -199,10 +208,10 @@ async function exportPDF(){
 
 // ===== Clear Data =====
 function clearData(){
-  if(confirm("Are you sure you want to delete all customer data? This cannot be undone.")){
-    db.collection("customers").get().then(snapshot=>{
-      snapshot.forEach(doc=>{ db.collection("customers").doc(doc.id).delete(); });
-    });
+  if(confirm("Delete all your entries?")){
+    const userEmail=auth.currentUser.email;
+    db.collection("customers").where("promoter","==",userEmail).get()
+    .then(snapshot=>snapshot.forEach(doc=>db.collection("customers").doc(doc.id).delete()));
   }
 }
 
