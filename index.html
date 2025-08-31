@@ -48,7 +48,7 @@ th { background:#1a73e8; }
   <div class="flame" style="left:60%; animation-delay:2s;"></div>
 </div>
 
-<header>📊 Customer Data Tracker</header>
+<header>📊 Customer Data </header>
 
 <!-- Login -->
 <div class="container" id="login-container">
@@ -72,10 +72,10 @@ th { background:#1a73e8; }
 <button onclick="startScanner()">📷 Scan</button>
 <div id="qr-reader"></div>
 
-<label>Date Received</label>
+<label>Date</label>
 <input type="date" id="custDate"/>
 
-<label>Offer Taken?</label>
+<label>Got Data ?</label>
 <select id="custOffer">
 <option value="Yes">Yes</option>
 <option value="No">No</option>
@@ -90,7 +90,7 @@ th { background:#1a73e8; }
 <input type="text" id="filterBox" onkeyup="filterTable()" placeholder="Type to filter..."/>
 
 <table id="dataTable">
-<thead><tr><th>Name</th><th>Number</th><th>IMEI</th><th>Date</th><th>Offer</th><th>Promoter</th></tr></thead>
+<thead><tr><th>Name</th><th>Number</th><th>IMEI</th><th>Date</th><th>Data</th><th>Promoter</th></tr></thead>
 <tbody></tbody>
 </table>
 </div>
