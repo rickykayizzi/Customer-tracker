@@ -144,7 +144,7 @@ function addEntry(){
   const name=document.getElementById("custName").value.trim();
   const number=document.getElementById("custNumber").value.trim();
   const imei=document.getElementById("custIMEI").value.trim();
-  const date=document.getElementById("custDate").value;
+  const date=document.getElementById("custDate").value || new Date().toISOString().split('T')[0];
   const offer=document.getElementById("custOffer").value;
   if(!name||!number||number.length!==10){ alert("Enter valid data."); return; }
   const promoter=auth.currentUser.email;
@@ -180,15 +180,15 @@ function loadEntries(userEmail){
 
 // ===== QR Scanner =====
 function startScanner(){
-  const html5QrCode=new Html5Qrcode("qr-reader");
+  const html5QrCode = new Html5Qrcode("qr-reader");
   html5QrCode.start(
     {facingMode:"environment"},
-    {fps:10, qrbox:250},
+    {fps:10, qrbox:{width:150,height:30}}, // small rectangle
     qrCodeMessage=>{
-      document.getElementById("custIMEI").value=qrCodeMessage.slice(0,14);
+      document.getElementById("custIMEI").value = qrCodeMessage.slice(0,14);
       html5QrCode.stop().then(()=>document.getElementById("qr-reader").style.display="none");
     },
-    errorMessage=>console.log(errorMessage)
+    errorMessage => console.log(errorMessage)
   );
   document.getElementById("qr-reader").style.display="block";
 }
