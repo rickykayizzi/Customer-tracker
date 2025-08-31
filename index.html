@@ -1,1 +1,252 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Customer Tracker</title>
+  <meta name="theme-color" content="#0a2a43"/>
+
+  <!-- Styles -->
+  <style>
+    body {
+      margin: 0;
+      font-family: "Segoe UI", sans-serif;
+      background: #0a2a43;
+      color: #f1f1f1;
+      transition: background 0.4s, color 0.4s;
+    }
+    header {
+      background: linear-gradient(90deg, #0d3d66, #0a2a43);
+      padding: 15px;
+      text-align: center;
+      font-size: 1.4rem;
+      font-weight: bold;
+      color: #fff;
+      letter-spacing: 1px;
+    }
+    .container {
+      padding: 20px;
+    }
+    label {
+      display: block;
+      margin: 8px 0 4px;
+      font-weight: bold;
+      color: #bcd9f4;
+    }
+    input, select {
+      width: 100%;
+      padding: 10px;
+      border-radius: 10px;
+      border: none;
+      outline: none;
+      margin-bottom: 12px;
+      background: #133b5c;
+      color: #fff;
+    }
+    button {
+      padding: 10px 18px;
+      border: none;
+      border-radius: 10px;
+      background: #1a73e8;
+      color: #fff;
+      font-weight: bold;
+      cursor: pointer;
+      margin: 8px 4px;
+      transition: 0.3s;
+    }
+    button:hover {
+      background: #125ec5;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      background: #12263f;
+      color: #fff;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    th, td {
+      padding: 12px;
+      text-align: left;
+    }
+    th {
+      background: #1a73e8;
+      color: #fff;
+    }
+    tr:nth-child(even) {
+      background: #16324f;
+    }
+    #scanner {
+      width: 100%;
+      max-height: 320px;
+      margin: 15px 0;
+      border: 3px solid #1a73e8;
+      border-radius: 12px;
+      display: none;
+    }
+    .splash {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: #0a2a43;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      z-index: 1000;
+      color: #fff;
+      font-size: 2rem;
+      animation: fadeout 1.2s ease 2.5s forwards;
+    }
+    @keyframes fadeout {
+      to { opacity: 0; visibility: hidden; }
+    }
+    .flame {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      background: #1a73e8;
+      border-radius: 50%;
+      animation: fly 3s infinite linear;
+    }
+    @keyframes fly {
+      from { transform: translateY(0) scale(1); opacity: 1; }
+      to { transform: translateY(-200px) scale(0.3); opacity: 0; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Splash screen -->
+  <div class="splash">
+    <div style="font-size:3rem; font-weight:bold;">🔥 KAYIZZI’S 🧠</div>
+    <div style="margin-top:12px; font-size:1.2rem;">Customer Tracker</div>
+    <div class="flame" style="left:40%; animation-delay:0s;"></div>
+    <div class="flame" style="left:50%; animation-delay:0.5s;"></div>
+    <div class="flame" style="left:60%; animation-delay:1s;"></div>
+  </div>
+
+  <header>📊 Customer Data Tracker</header>
+  <div class="container">
+    <label>Customer Name</label>
+    <input type="text" id="custName" placeholder="Enter customer name"/>
+
+    <label>MTN Number</label>
+    <input type="number" id="custNumber" maxlength="10" placeholder="10-digit MTN number"/>
+
+    <label>IMEI</label>
+    <input type="text" id="custIMEI" placeholder="Scan or enter IMEI"/>
+    <button onclick="startScanner()">📷 Scan Barcode</button>
+    <video id="scanner"></video>
+
+    <label>Date Received</label>
+    <input type="date" id="custDate"/>
+
+    <label>Offer Taken?</label>
+    <select id="custOffer">
+      <option value="Yes">Yes</option>
+      <option value="No">No</option>
+    </select>
+
+    <button onclick="addEntry()">➕ Add Entry</button>
+    <button onclick="exportCSV()">📂 Export CSV</button>
+    <button onclick="exportPDF()">📑 Export PDF</button>
+
+    <label>Filter by Name/Number</label>
+    <input type="text" id="filterBox" onkeyup="filterTable()" placeholder="Type to filter..."/>
+
+    <table id="dataTable">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Number</th>
+          <th>IMEI</th>
+          <th>Date</th>
+          <th>Offer</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://unpkg.com/@ericblade/quagga2/dist/quagga.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script>
+    const tableBody = document.querySelector("#dataTable tbody");
+    const scannerEl = document.getElementById("scanner");
+
+    function addEntry() {
+      const name = document.getElementById("custName").value.trim();
+      const number = document.getElementById("custNumber").value.trim();
+      const imei = document.getElementById("custIMEI").value.trim();
+      const date = document.getElementById("custDate").value;
+      const offer = document.getElementById("custOffer").value;
+
+      if (!name || !number || number.length !== 10) {
+        alert("Please enter a valid name and 10-digit MTN number.");
+        return;
+      }
+
+      const row = `<tr>
+        <td>${name}</td>
+        <td>${number}</td>
+        <td>${imei}</td>
+        <td>${date}</td>
+        <td>${offer}</td>
+      </tr>`;
+      tableBody.insertAdjacentHTML("beforeend", row);
+    }
+
+    function startScanner() {
+      scannerEl.style.display = "block";
+      Quagga.init({
+        inputStream: { type: "LiveStream", target: scannerEl, constraints: { facingMode: "environment" } },
+        decoder: { readers: ["code_128_reader", "ean_reader", "ean_8_reader", "code_39_reader"] }
+      }, err => {
+        if (err) { console.error(err); return; }
+        Quagga.start();
+      });
+
+      Quagga.onDetected(result => {
+        document.getElementById("custIMEI").value = result.codeResult.code;
+        Quagga.stop();
+        scannerEl.style.display = "none";
+      });
+    }
+
+    function exportCSV() {
+      let rows = [["Name", "Number", "IMEI", "Date", "Offer"]];
+      document.querySelectorAll("#dataTable tbody tr").forEach(tr => {
+        rows.push([...tr.children].map(td => td.innerText));
+      });
+      let csv = rows.map(r => r.join(",")).join("\n");
+      let blob = new Blob([csv], { type: "text/csv" });
+      let link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "customers.csv";
+      link.click();
+    }
+
+    async function exportPDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      doc.text("Customer Data", 20, 20);
+      let y = 30;
+      document.querySelectorAll("#dataTable tbody tr").forEach(tr => {
+        let row = [...tr.children].map(td => td.innerText).join(" | ");
+        doc.text(row, 20, y);
+        y += 10;
+      });
+      doc.save("customers.pdf");
+    }
+
+    function filterTable() {
+      const q = document.getElementById("filterBox").value.toLowerCase();
+      document.querySelectorAll("#dataTable tbody tr").forEach(tr => {
+        tr.style.display = tr.innerText.toLowerCase().includes(q) ? "" : "none";
+      });
+    }
+  </script>
+</body>
+</html>
