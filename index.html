@@ -1,294 +1,150 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Team Customer Tracker</title>
-<meta name="theme-color" content="#0a2a43"/>
-
-<!-- Firebase (Compat SDKs for simplicity in single-file pages) -->
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
-
-<!-- jsPDF -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
-<style>
-  body { margin:0; font-family:"Segoe UI", sans-serif; background:#0a2a43; color:#fff; }
-  header { text-align:center; font-size:1.4rem; font-weight:bold; padding:15px; background:linear-gradient(90deg,#0d3d66,#0a2a43); }
-  .container { padding:20px; max-width:440px; margin:auto; }
-  label { display:block; margin-top:10px; margin-bottom:4px; color:#bcd9f4; font-weight:600; }
-  input, select, button { width:100%; padding:10px; margin:6px 0; border-radius:8px; border:none; font-size:1rem; }
-  input, select { background:#133b5c; color:#fff; }
-  button { background:#1a73e8; color:#fff; cursor:pointer; font-weight:bold; }
-  button:hover { background:#125ec5; }
-  .row { display:flex; gap:8px; align-items:center; }
-  .row > * { flex:1; }
-  .muted { font-size:0.85rem; color:#bcd9f4; opacity:0.9; }
-  table { width:100%; margin-top:15px; border-collapse:collapse; background:#12263f; border-radius:12px; overflow:hidden; }
-  th, td { padding:10px; text-align:left; }
-  th { background:#1a73e8; }
-  tr:nth-child(even) { background:#16324f; }
-  a.view-link { color:#8fd3ff; text-decoration:underline; }
-  .splash {
-    position:fixed; inset:0; background:#0a2a43; display:flex; align-items:center; justify-content:center;
-    flex-direction:column; z-index:1000; color:#fff; font-size:2rem; animation:fadeout 1.2s ease 2.5s forwards;
-  }
-  @keyframes fadeout { to { opacity:0; visibility:hidden; } }
-  .flame { position:absolute; width:8px; height:8px; background:#1a73e8; border-radius:50%; animation:fly 3s infinite linear; }
-  @keyframes fly { from { transform: translateY(0) scale(1); opacity:1; } to { transform: translateY(-200px) scale(0.3); opacity:0; } }
-  .actions { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
-</style>
+  <meta charset="UTF-8">
+  <title>Customer Tracker</title>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-storage.js"></script>
 </head>
 <body>
+  <h1>📱 Customer Tracker</h1>
 
-<!-- Splash screen -->
-<div class="splash">
-  <div style="font-size:3rem; font-weight:bold;">KAYIZZI’S</div>
-  <div style="margin-top:12px; font-size:1.2rem;">Customer Tracker</div>
-  <div class="flame" style="left:40%; animation-delay:0s;"></div>
-  <div class="flame" style="left:50%; animation-delay:0.5s;"></div>
-  <div class="flame" style="left:60%; animation-delay:2s;"></div>
-</div>
-
-<header>📊 Customer Data</header>
-
-<!-- Login -->
-<div class="container" id="login-container">
-  <h2>Login</h2>
-  <input type="email" id="login-email" placeholder="Email"/>
-  <input type="password" id="login-password" placeholder="Password"/>
-  <div class="row">
-    <button onclick="login()">Login</button>
-    <button onclick="signup()">Sign Up</button>
-  </div>
-  <div class="muted">Use your team email. Your saved entries will load automatically after login.</div>
-</div>
-
-<!-- App -->
-<div class="container" id="app-container" style="display:none;">
-  <label>Customer Name</label>
-  <input type="text" id="custName" placeholder="Enter customer name"/>
-
-  <label>MTN Number</label>
-  <input type="number" id="custNumber" placeholder="10-digit MTN number"/>
-
-  <label>IMEI (manual)</label>
-  <input type="text" id="custIMEI" placeholder="Enter IMEI (14–16 digits)" maxlength="16"/>
-
-  <label>Receipt Picture (JPG/PNG)</label>
-  <input type="file" id="receiptFile" accept="image/png, image/jpeg"/>
-
-  <div class="row">
-    <div style="flex:1;">
-      <label>Date</label>
-      <input type="date" id="custDate"/>
-    </div>
-    <div style="flex:1;">
-      <label>Got Data?</label>
-      <select id="custOffer">
-        <option value="Yes">Yes</option>
-        <option value="No">No</option>
-      </select>
-    </div>
+  <!-- Login -->
+  <div id="loginSection">
+    <input type="password" id="passwordInput" placeholder="Enter Password" />
+    <button onclick="login()">Unlock</button>
   </div>
 
-  <div class="actions">
+  <!-- Main app -->
+  <div id="appSection" style="display:none;">
+    <h2>Add New Entry</h2>
+    <input id="custName" placeholder="Customer Name"><br>
+    <input id="custPhone" placeholder="Phone Number"><br>
+    <input id="custIMEI" placeholder="IMEI (up to 16 digits)" maxlength="16"><br>
+    <input id="custOffer" placeholder="Offer"><br>
+    <input type="date" id="custDate"><br>
+    <input type="file" id="custReceipt" accept="image/*"><br>
     <button onclick="addEntry()">➕ Add Entry</button>
-    <button onclick="exportPDF()">📑 Export PDF</button>
-    <button onclick="clearData()">🗑 Clear Data</button>
-    <button onclick="logout()">Logout</button>
+    <button onclick="logout()">🔒 Logout</button>
+
+    <h2>📋 All Entries</h2>
+    <table id="entriesTable" border="1">
+      <thead>
+        <tr>
+          <th>Customer</th>
+          <th>Phone</th>
+          <th>IMEI</th>
+          <th>Offer</th>
+          <th>Date</th>
+          <th>Receipt</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
   </div>
 
-  <label>Filter by Name/Number</label>
-  <input type="text" id="filterBox" onkeyup="filterTable()" placeholder="Type to filter..."/>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+    import { getFirestore, collection, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+    import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-storage.js";
 
-  <table id="dataTable">
-    <thead>
-      <tr>
-        <th>Name</th><th>Number</th><th>IMEI</th><th>Date</th><th>Data</th><th>Receipt</th><th>Promoter</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-</div>
+    // 🔹 Your Firebase Config
+    const firebaseConfig = {
+      apiKey: "AIzaSyCQyyaaoa-QIjPQ9UfHJXEwWAfCKPKc-u0",
+      authDomain: "customer-follow-up-7ab17.firebaseapp.com",
+      projectId: "customer-follow-up-7ab17",
+      storageBucket: "customer-follow-up-7ab17.appspot.com",
+      messagingSenderId: "350957822054",
+      appId: "1:350957822054:web:c5a3aca9deacebbe050da7",
+      measurementId: "G-08FJBE5F17"
+    };
 
-<script>
-// ===== Firebase Config =====
-const firebaseConfig = {
-  apiKey: "AIzaSyCQyyaaoa-QIjPQ9UfHJXEwWAfCKPKc-u0",
-  authDomain: "customer-follow-up-7ab17.firebaseapp.com",
-  projectId: "customer-follow-up-7ab17",
-  storageBucket: "customer-follow-up-7ab17.firebasestorage.app", // If uploads fail, replace with your appspot.com bucket from Firebase console
-  messagingSenderId: "350957822054",
-  appId: "1:350957822054:web:c5a3aca9deacebbe050da7",
-  measurementId: "G-08FJBE5F17"
-};
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.firestore();
-const storage = firebase.storage();
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const storage = getStorage(app);
 
-// ===== Auth handlers =====
-function login(){
-  const email=document.getElementById("login-email").value;
-  const pass=document.getElementById("login-password").value;
-  auth.signInWithEmailAndPassword(email,pass).catch(e=>alert(e.message));
-}
-function signup(){
-  const email=document.getElementById("login-email").value;
-  const pass=document.getElementById("login-password").value;
-  auth.createUserWithEmailAndPassword(email,pass).catch(e=>alert(e.message));
-}
-function logout(){ auth.signOut(); }
+    let userId = null;
 
-auth.onAuthStateChanged(user=>{
-  if(user){
-    document.getElementById("login-container").style.display="none";
-    document.getElementById("app-container").style.display="block";
-    loadEntries(user.email); // Always show old entries on login
-  }else{
-    document.getElementById("login-container").style.display="block";
-    document.getElementById("app-container").style.display="none";
-  }
-});
-
-// ===== Add Entry (with optional receipt upload) =====
-async function addEntry(){
-  const name=document.getElementById("custName").value.trim();
-  const number=document.getElementById("custNumber").value.trim();
-  const imei=document.getElementById("custIMEI").value.trim();
-  const date=document.getElementById("custDate").value || new Date().toISOString().split('T')[0];
-  const offer=document.getElementById("custOffer").value;
-  const file=document.getElementById("receiptFile").files[0];
-
-  if(!name){ alert("Customer name is required."); return; }
-  if(!number || number.length!==10){ alert("Enter a valid 10-digit MTN number."); return; }
-  if(!imei || imei.length<14 || imei.length>16 || !/^\d+$/.test(imei)){ alert("Enter a valid IMEI (14–16 digits)."); return; }
-  if(!auth.currentUser){ alert("Please login first."); return; }
-
-  const promoter = auth.currentUser.email;
-  let receiptUrl = "";
-  let receiptPath = "";
-
-  try {
-    if(file){
-      // Size guard (e.g., 6MB max)
-      const MAX = 6 * 1024 * 1024;
-      if(file.size > MAX){ alert("Receipt image is too large. Max 6MB."); return; }
-
-      const safeName = file.name.replace(/[^\w.\-]/g,"_");
-      const stamp = Date.now();
-      receiptPath = `receipts/${auth.currentUser.uid}/${stamp}_${safeName}`;
-      const ref = storage.ref().child(receiptPath);
-      await ref.put(file);
-      receiptUrl = await ref.getDownloadURL();
-    }
-
-    await db.collection("customers").add({
-      name, number, imei, date, offer, promoter, receiptUrl, receiptPath, createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
-
-    // Clear form
-    document.getElementById("custName").value="";
-    document.getElementById("custNumber").value="";
-    document.getElementById("custIMEI").value="";
-    document.getElementById("custDate").value="";
-    document.getElementById("receiptFile").value=null;
-
-  } catch(err){
-    console.error(err);
-    alert("Failed to save entry. " + err.message);
-  }
-}
-
-// ===== Load Entries (always show past entries for this user) =====
-function loadEntries(userEmail){
-  const tbody=document.querySelector("#dataTable tbody");
-  db.collection("customers")
-    .where("promoter","==",userEmail)
-    .orderBy("date","desc")
-    .onSnapshot(snapshot=>{
-      tbody.innerHTML="";
-      snapshot.forEach(doc=>{
-        const data=doc.data();
-        const link = data.receiptUrl ? `<a class="view-link" href="${data.receiptUrl}" target="_blank">📷 View</a>` : `<span class="muted">—</span>`;
-        const row=`<tr>
-          <td>${data.name || ""}</td>
-          <td>${data.number || ""}</td>
-          <td>${data.imei || ""}</td>
-          <td>${data.date || ""}</td>
-          <td>${data.offer || ""}</td>
-          <td>${link}</td>
-          <td>${data.promoter || ""}</td>
-        </tr>`;
-        tbody.insertAdjacentHTML("beforeend",row);
-      });
-    }, err=>{
-      console.error(err);
-      alert("Failed to load entries. " + err.message);
-    });
-}
-
-// ===== Export PDF (includes receipt link text) =====
-async function exportPDF(){
-  const { jsPDF }=window.jspdf;
-  const doc=new jsPDF();
-  doc.text("Customer Data",20,20);
-  let y=30;
-  // headers
-  doc.text("Name | Number | IMEI | Date | Data | ReceiptURL", 20, y); y+=10;
-
-  const rows=[...document.querySelectorAll("#dataTable tbody tr")];
-  rows.forEach(tr=>{
-    const tds=[...tr.children].map(td=>td.innerText);
-    // Replace "View" with actual href if present
-    const linkEl = tr.children[5].querySelector("a");
-    const url = linkEl ? linkEl.getAttribute("href") : "";
-    const line = [tds[0],tds[1],tds[2],tds[3],tds[4],url].join(" | ");
-    doc.text(line,20,y);
-    y += 8;
-    if (y > 280) { doc.addPage(); y = 20; }
-  });
-  doc.save("customers.pdf");
-}
-
-// ===== Clear Data (deletes Firestore docs + Storage files for this user) =====
-async function clearData(){
-  if(!auth.currentUser){ alert("Please login first."); return; }
-  if(!confirm("Delete ALL your entries (including uploaded receipt images)?")) return;
-
-  const userEmail = auth.currentUser.email;
-
-  try{
-    const snap = await db.collection("customers").where("promoter","==",userEmail).get();
-    const deletions = [];
-    snap.forEach(docSnap=>{
-      const d = docSnap.data();
-      // delete storage file if exists
-      if(d.receiptPath){
-        const ref = storage.ref().child(d.receiptPath);
-        deletions.push(ref.delete().catch(()=>{})); // ignore missing files
+    // Simple password login
+    function login() {
+      const password = document.getElementById("passwordInput").value;
+      if (password === "1234") { // 🔑 change this
+        userId = "demoUser"; // static for now
+        document.getElementById("loginSection").style.display = "none";
+        document.getElementById("appSection").style.display = "block";
+        loadEntries();
+      } else {
+        alert("Wrong password!");
       }
-      deletions.push(db.collection("customers").doc(docSnap.id).delete());
-    });
-    await Promise.all(deletions);
-  }catch(err){
-    console.error(err);
-    alert("Failed to clear data. " + err.message);
-  }
-}
+    }
+    window.login = login;
 
-// ===== Filter Table =====
-function filterTable(){
-  const q=document.getElementById("filterBox").value.toLowerCase();
-  document.querySelectorAll("#dataTable tbody tr").forEach(tr=>{
-    tr.style.display = tr.innerText.toLowerCase().includes(q) ? "" : "none";
-  });
-}
-</script>
+    function logout() {
+      document.getElementById("loginSection").style.display = "block";
+      document.getElementById("appSection").style.display = "none";
+    }
+    window.logout = logout;
 
+    async function addEntry() {
+      const name = document.getElementById("custName").value;
+      const phone = document.getElementById("custPhone").value;
+      const imei = document.getElementById("custIMEI").value;
+      const offer = document.getElementById("custOffer").value;
+      const date = document.getElementById("custDate").value;
+      const file = document.getElementById("custReceipt").files[0];
+
+      let receiptUrl = "";
+      if (file) {
+        const storageRef = ref(storage, `receipts/${Date.now()}_${file.name}`);
+        await uploadBytes(storageRef, file);
+        receiptUrl = await getDownloadURL(storageRef);
+      }
+
+      await addDoc(collection(db, "users", userId, "entries"), {
+        customerName: name,
+        phoneNumber: phone,
+        imei: imei,
+        offer: offer,
+        date: date,
+        receiptUrl: receiptUrl,
+        timestamp: Date.now()
+      });
+
+      // Clear form
+      document.getElementById("custName").value = "";
+      document.getElementById("custPhone").value = "";
+      document.getElementById("custIMEI").value = "";
+      document.getElementById("custOffer").value = "";
+      document.getElementById("custDate").value = "";
+      document.getElementById("custReceipt").value = "";
+    }
+    window.addEntry = addEntry;
+
+    function loadEntries() {
+      const entriesRef = collection(db, "users", userId, "entries");
+      onSnapshot(entriesRef, (snapshot) => {
+        const tbody = document.querySelector("#entriesTable tbody");
+        tbody.innerHTML = "";
+
+        snapshot.forEach((doc) => {
+          const data = doc.data();
+          const row = document.createElement("tr");
+
+          row.innerHTML = `
+            <td>${data.customerName || ""}</td>
+            <td>${data.phoneNumber || ""}</td>
+            <td>${data.imei || ""}</td>
+            <td>${data.offer || ""}</td>
+            <td>${data.date || ""}</td>
+            <td>${data.receiptUrl ? `<a href="${data.receiptUrl}" target="_blank">📷 View</a>` : "—"}</td>
+          `;
+
+          tbody.appendChild(row);
+        });
+      });
+    }
+  </script>
 </body>
 </html>
