@@ -75,7 +75,7 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
 
   <script>
-    // 🔹 Your Firebase Config
+    // 🔹 Firebase Config
     const firebaseConfig = {
       apiKey: "AIzaSyCQyyaaoa-QIjPQ9UfHJXEwWAfCKPKc-u0",
       authDomain: "customer-follow-up-7ab17.firebaseapp.com",
@@ -90,17 +90,23 @@
     const db = firebase.firestore();
     const storage = firebase.storage();
 
+    // 🔹 Auth state listener (decide what to show)
+    auth.onAuthStateChanged(user=>{
+      if(user){
+        document.getElementById("loginSection").style.display="none";
+        document.getElementById("appSection").style.display="block";
+        loadEntries(user.email);
+      } else {
+        document.getElementById("loginSection").style.display="block";
+        document.getElementById("appSection").style.display="none";
+      }
+    });
+
     // 🔹 Login / Signup
     function login(){
       const email=document.getElementById("loginEmail").value;
       const pass=document.getElementById("loginPassword").value;
-      auth.signInWithEmailAndPassword(email,pass)
-        .then(()=>{ 
-          document.getElementById("loginSection").style.display="none";
-          document.getElementById("appSection").style.display="block";
-          loadEntries(email);
-        })
-        .catch(e=>alert(e.message));
+      auth.signInWithEmailAndPassword(email,pass).catch(e=>alert(e.message));
     }
     function signup(){
       const email=document.getElementById("loginEmail").value;
@@ -109,67 +115,69 @@
         .then(()=>alert("Signup success! Now login."))
         .catch(e=>alert(e.message));
     }
-    function logout(){
-      auth.signOut().then(()=>{
-        document.getElementById("loginSection").style.display="block";
-        document.getElementById("appSection").style.display="none";
-      });
-    }
+    function logout(){ auth.signOut(); }
 
     // 🔹 Add Entry
     document.getElementById("entryForm").addEventListener("submit", async (e)=>{
       e.preventDefault();
-      const name=document.getElementById("custName").value;
-      const number=document.getElementById("custNumber").value;
-      const imei=document.getElementById("custIMEI").value;
-      const date=document.getElementById("custDate").value;
-      const offer=document.getElementById("custOffer").value;
-      const receipt=document.getElementById("custReceipt").files[0];
-      const user=auth.currentUser;
-      if(!user){alert("Login first!");return;}
-      let receiptUrl="",receiptPath="";
-      if(receipt){
-        const ref=storage.ref("receipts/"+Date.now()+"_"+receipt.name);
-        await ref.put(receipt);
-        receiptUrl=await ref.getDownloadURL();
-        receiptPath=ref.fullPath;
+      try {
+        const name=document.getElementById("custName").value;
+        const number=document.getElementById("custNumber").value;
+        const imei=document.getElementById("custIMEI").value;
+        const date=document.getElementById("custDate").value;
+        const offer=document.getElementById("custOffer").value;
+        const receipt=document.getElementById("custReceipt").files[0];
+        const user=auth.currentUser;
+        if(!user){alert("Login first!");return;}
+        let receiptUrl="",receiptPath="";
+        if(receipt){
+          const ref=storage.ref("receipts/"+Date.now()+"_"+receipt.name);
+          await ref.put(receipt);
+          receiptUrl=await ref.getDownloadURL();
+          receiptPath=ref.fullPath;
+        }
+        await db.collection("customers").add({
+          name, number, imei, date, offer, promoter:user.email,
+          receiptUrl, receiptPath,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        e.target.reset();
+      } catch(err){
+        alert("Error adding entry: "+err.message);
       }
-      await db.collection("customers").add({
-        name, number, imei, date, offer, promoter:user.email,
-        receiptUrl, receiptPath,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
-      e.target.reset();
     });
 
     // 🔹 Load Entries
     function loadEntries(userEmail){
       const tbody=document.querySelector("#dataTable tbody");
-      db.collection("customers")
-        .where("promoter","==",userEmail)
-        .orderBy("createdAt","desc")
-        .onSnapshot(snapshot=>{
-          tbody.innerHTML="";
-          snapshot.forEach(doc=>{
-            const data=doc.data();
-            const link=data.receiptUrl
-              ? `<a class="view-link" href="${data.receiptUrl}" target="_blank">📷 View</a>`
-              : `<span class="muted">—</span>`;
-            const row=`<tr>
-              <td>${data.name||""}</td>
-              <td>${data.number||""}</td>
-              <td>${data.imei||""}</td>
-              <td>${data.date||""}</td>
-              <td>${data.offer||""}</td>
-              <td>${link}</td>
-              <td>${data.promoter||""}</td>
-            </tr>`;
-            tbody.insertAdjacentHTML("beforeend",row);
+      try {
+        db.collection("customers")
+          .where("promoter","==",userEmail)
+          .orderBy("createdAt","desc")
+          .onSnapshot(snapshot=>{
+            tbody.innerHTML="";
+            snapshot.forEach(doc=>{
+              const data=doc.data();
+              const link=data.receiptUrl
+                ? `<a class="view-link" href="${data.receiptUrl}" target="_blank">📷 View</a>`
+                : `<span class="muted">—</span>`;
+              const row=`<tr>
+                <td>${data.name||""}</td>
+                <td>${data.number||""}</td>
+                <td>${data.imei||""}</td>
+                <td>${data.date||""}</td>
+                <td>${data.offer||""}</td>
+                <td>${link}</td>
+                <td>${data.promoter||""}</td>
+              </tr>`;
+              tbody.insertAdjacentHTML("beforeend",row);
+            });
+          },err=>{
+            alert("Firestore load failed: "+err.message);
           });
-        },err=>{
-          console.error(err);
-          alert("Failed to load entries: "+err.message);
-        });
+      } catch(err){
+        alert("Error loading entries: "+err.message);
+      }
     }
   </script>
 </body>
