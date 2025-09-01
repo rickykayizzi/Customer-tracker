@@ -3,53 +3,78 @@
 <head>
   <meta charset="UTF-8">
   <title>Customer Tracker</title>
-  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-storage.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f9f9f9; margin: 0; padding: 0; }
+    .container { max-width: 900px; margin: auto; padding: 20px; }
+    h1 { text-align: center; color: #333; }
+    form { background: #fff; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    label { display: block; margin-top: 10px; font-weight: bold; }
+    input, select { width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #ddd; border-radius: 4px; }
+    button { margin-top: 15px; padding: 10px 15px; border: none; border-radius: 4px; background: #007BFF; color: #fff; cursor: pointer; }
+    button:hover { background: #0056b3; }
+    table { width: 100%; border-collapse: collapse; background: #fff; margin-top: 20px; }
+    th, td { padding: 10px; border: 1px solid #ddd; text-align: left; }
+    th { background: #f2f2f2; }
+    .view-link { color: #007BFF; text-decoration: none; }
+    .muted { color: #aaa; }
+  </style>
 </head>
 <body>
-  <h1>📱 Customer Tracker</h1>
+  <div class="container">
+    <h1>Customer Tracker</h1>
 
-  <!-- Login -->
-  <div id="loginSection">
-    <input type="password" id="passwordInput" placeholder="Enter Password" />
-    <button onclick="login()">Unlock</button>
+    <!-- Login -->
+    <div id="loginSection">
+      <h2>Login</h2>
+      <input type="email" id="loginEmail" placeholder="Email" required>
+      <input type="password" id="loginPassword" placeholder="Password" required>
+      <button onclick="login()">Login</button>
+      <button onclick="signup()">Sign Up</button>
+    </div>
+
+    <!-- App Section -->
+    <div id="appSection" style="display:none;">
+      <form id="entryForm">
+        <label>Name</label>
+        <input type="text" id="custName" required>
+        <label>Number</label>
+        <input type="text" id="custNumber" required>
+        <label>IMEI</label>
+        <input type="text" id="custIMEI" required>
+        <label>Date</label>
+        <input type="date" id="custDate" required>
+        <label>Offer</label>
+        <input type="text" id="custOffer">
+        <label>Receipt Picture</label>
+        <input type="file" id="custReceipt" accept="image/*">
+        <button type="submit">Add Entry</button>
+        <button type="button" onclick="logout()">Logout</button>
+      </form>
+
+      <table id="dataTable">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Number</th>
+            <th>IMEI</th>
+            <th>Date</th>
+            <th>Offer</th>
+            <th>Receipt</th>
+            <th>Promoter</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
   </div>
 
-  <!-- Main app -->
-  <div id="appSection" style="display:none;">
-    <h2>Add New Entry</h2>
-    <input id="custName" placeholder="Customer Name"><br>
-    <input id="custPhone" placeholder="Phone Number"><br>
-    <input id="custIMEI" placeholder="IMEI (up to 16 digits)" maxlength="16"><br>
-    <input id="custOffer" placeholder="Offer"><br>
-    <input type="date" id="custDate"><br>
-    <input type="file" id="custReceipt" accept="image/*"><br>
-    <button onclick="addEntry()">➕ Add Entry</button>
-    <button onclick="logout()">🔒 Logout</button>
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
 
-    <h2>📋 All Entries</h2>
-    <table id="entriesTable" border="1">
-      <thead>
-        <tr>
-          <th>Customer</th>
-          <th>Phone</th>
-          <th>IMEI</th>
-          <th>Offer</th>
-          <th>Date</th>
-          <th>Receipt</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </div>
-
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-    import { getFirestore, collection, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
-    import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-storage.js";
-
+  <script>
     // 🔹 Your Firebase Config
     const firebaseConfig = {
       apiKey: "AIzaSyCQyyaaoa-QIjPQ9UfHJXEwWAfCKPKc-u0",
@@ -60,90 +85,91 @@
       appId: "1:350957822054:web:c5a3aca9deacebbe050da7",
       measurementId: "G-08FJBE5F17"
     };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+    const storage = firebase.storage();
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const storage = getStorage(app);
-
-    let userId = null;
-
-    // Simple password login
-    function login() {
-      const password = document.getElementById("passwordInput").value;
-      if (password === "1234") { // 🔑 change this
-        userId = "demoUser"; // static for now
-        document.getElementById("loginSection").style.display = "none";
-        document.getElementById("appSection").style.display = "block";
-        loadEntries();
-      } else {
-        alert("Wrong password!");
-      }
+    // 🔹 Login / Signup
+    function login(){
+      const email=document.getElementById("loginEmail").value;
+      const pass=document.getElementById("loginPassword").value;
+      auth.signInWithEmailAndPassword(email,pass)
+        .then(()=>{ 
+          document.getElementById("loginSection").style.display="none";
+          document.getElementById("appSection").style.display="block";
+          loadEntries(email);
+        })
+        .catch(e=>alert(e.message));
     }
-    window.login = login;
-
-    function logout() {
-      document.getElementById("loginSection").style.display = "block";
-      document.getElementById("appSection").style.display = "none";
+    function signup(){
+      const email=document.getElementById("loginEmail").value;
+      const pass=document.getElementById("loginPassword").value;
+      auth.createUserWithEmailAndPassword(email,pass)
+        .then(()=>alert("Signup success! Now login."))
+        .catch(e=>alert(e.message));
     }
-    window.logout = logout;
-
-    async function addEntry() {
-      const name = document.getElementById("custName").value;
-      const phone = document.getElementById("custPhone").value;
-      const imei = document.getElementById("custIMEI").value;
-      const offer = document.getElementById("custOffer").value;
-      const date = document.getElementById("custDate").value;
-      const file = document.getElementById("custReceipt").files[0];
-
-      let receiptUrl = "";
-      if (file) {
-        const storageRef = ref(storage, `receipts/${Date.now()}_${file.name}`);
-        await uploadBytes(storageRef, file);
-        receiptUrl = await getDownloadURL(storageRef);
-      }
-
-      await addDoc(collection(db, "users", userId, "entries"), {
-        customerName: name,
-        phoneNumber: phone,
-        imei: imei,
-        offer: offer,
-        date: date,
-        receiptUrl: receiptUrl,
-        timestamp: Date.now()
+    function logout(){
+      auth.signOut().then(()=>{
+        document.getElementById("loginSection").style.display="block";
+        document.getElementById("appSection").style.display="none";
       });
-
-      // Clear form
-      document.getElementById("custName").value = "";
-      document.getElementById("custPhone").value = "";
-      document.getElementById("custIMEI").value = "";
-      document.getElementById("custOffer").value = "";
-      document.getElementById("custDate").value = "";
-      document.getElementById("custReceipt").value = "";
     }
-    window.addEntry = addEntry;
 
-    function loadEntries() {
-      const entriesRef = collection(db, "users", userId, "entries");
-      onSnapshot(entriesRef, (snapshot) => {
-        const tbody = document.querySelector("#entriesTable tbody");
-        tbody.innerHTML = "";
+    // 🔹 Add Entry
+    document.getElementById("entryForm").addEventListener("submit", async (e)=>{
+      e.preventDefault();
+      const name=document.getElementById("custName").value;
+      const number=document.getElementById("custNumber").value;
+      const imei=document.getElementById("custIMEI").value;
+      const date=document.getElementById("custDate").value;
+      const offer=document.getElementById("custOffer").value;
+      const receipt=document.getElementById("custReceipt").files[0];
+      const user=auth.currentUser;
+      if(!user){alert("Login first!");return;}
+      let receiptUrl="",receiptPath="";
+      if(receipt){
+        const ref=storage.ref("receipts/"+Date.now()+"_"+receipt.name);
+        await ref.put(receipt);
+        receiptUrl=await ref.getDownloadURL();
+        receiptPath=ref.fullPath;
+      }
+      await db.collection("customers").add({
+        name, number, imei, date, offer, promoter:user.email,
+        receiptUrl, receiptPath,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      e.target.reset();
+    });
 
-        snapshot.forEach((doc) => {
-          const data = doc.data();
-          const row = document.createElement("tr");
-
-          row.innerHTML = `
-            <td>${data.customerName || ""}</td>
-            <td>${data.phoneNumber || ""}</td>
-            <td>${data.imei || ""}</td>
-            <td>${data.offer || ""}</td>
-            <td>${data.date || ""}</td>
-            <td>${data.receiptUrl ? `<a href="${data.receiptUrl}" target="_blank">📷 View</a>` : "—"}</td>
-          `;
-
-          tbody.appendChild(row);
+    // 🔹 Load Entries
+    function loadEntries(userEmail){
+      const tbody=document.querySelector("#dataTable tbody");
+      db.collection("customers")
+        .where("promoter","==",userEmail)
+        .orderBy("createdAt","desc")
+        .onSnapshot(snapshot=>{
+          tbody.innerHTML="";
+          snapshot.forEach(doc=>{
+            const data=doc.data();
+            const link=data.receiptUrl
+              ? `<a class="view-link" href="${data.receiptUrl}" target="_blank">📷 View</a>`
+              : `<span class="muted">—</span>`;
+            const row=`<tr>
+              <td>${data.name||""}</td>
+              <td>${data.number||""}</td>
+              <td>${data.imei||""}</td>
+              <td>${data.date||""}</td>
+              <td>${data.offer||""}</td>
+              <td>${link}</td>
+              <td>${data.promoter||""}</td>
+            </tr>`;
+            tbody.insertAdjacentHTML("beforeend",row);
+          });
+        },err=>{
+          console.error(err);
+          alert("Failed to load entries: "+err.message);
         });
-      });
     }
   </script>
 </body>
