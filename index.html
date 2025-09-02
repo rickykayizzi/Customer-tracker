@@ -1,184 +1,144 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Customer Tracker</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>A ONE PHONES</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    body { font-family: Arial, sans-serif; background: #f9f9f9; margin: 0; padding: 0; }
-    .container { max-width: 900px; margin: auto; padding: 20px; }
-    h1 { text-align: center; color: #333; }
-    form { background: #fff; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-    label { display: block; margin-top: 10px; font-weight: bold; }
-    input, select { width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #ddd; border-radius: 4px; }
-    button { margin-top: 15px; padding: 10px 15px; border: none; border-radius: 4px; background: #007BFF; color: #fff; cursor: pointer; }
-    button:hover { background: #0056b3; }
-    table { width: 100%; border-collapse: collapse; background: #fff; margin-top: 20px; }
-    th, td { padding: 10px; border: 1px solid #ddd; text-align: left; }
-    th { background: #f2f2f2; }
-    .view-link { color: #007BFF; text-decoration: none; }
-    .muted { color: #aaa; }
+    body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f4f4f9; }
+    #splash { position: fixed; top:0; left:0; width:100%; height:100%; background:#007bff; display:flex; align-items:center; justify-content:center; color:white; font-size:2em; font-weight:bold; animation: fadeOut 2s forwards; animation-delay:2s; z-index:1000; }
+    @keyframes fadeOut { to { opacity:0; visibility:hidden; } }
+    .container { padding: 20px; max-width: 600px; margin: auto; }
+    h2 { text-align: center; }
+    form { background: white; padding: 15px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom:20px; }
+    label { display:block; margin-top:10px; font-weight:bold; }
+    select, input, textarea, button { width:100%; padding:8px; margin-top:5px; border:1px solid #ccc; border-radius:5px; }
+    button { background:#007bff; color:white; font-weight:bold; cursor:pointer; }
+    button:hover { background:#0056b3; }
+    #feedbackList { margin-top:20px; }
+    .feedback-item { background:white; padding:10px; border-radius:5px; box-shadow:0 2px 4px rgba(0,0,0,0.1); margin-bottom:10px; }
+    canvas { background: white; padding: 10px; border-radius: 10px; }
   </style>
 </head>
 <body>
+  <div id="splash">A ONE PHONES</div>
   <div class="container">
-    <h1>Customer Tracker</h1>
+    <h2>Customer Feedback</h2>
+    <form id="feedbackForm">
+      <label>Customer Name:</label>
+      <input type="text" id="name" required />
 
-    <!-- Login -->
-    <div id="loginSection">
-      <h2>Login</h2>
-      <input type="email" id="loginEmail" placeholder="Email" required>
-      <input type="password" id="loginPassword" placeholder="Password" required>
-      <button onclick="login()">Login</button>
-      <button onclick="signup()">Sign Up</button>
-    </div>
+      <label>Brand:</label>
+      <select id="brand" required>
+        <option value="">Select Brand</option>
+        <option>ZTE</option>
+        <option>Samsung</option>
+        <option>Infinix</option>
+        <option>Tecno</option>
+        <option>Itel</option>
+      </select>
 
-    <!-- App Section -->
-    <div id="appSection" style="display:none;">
-      <form id="entryForm">
-        <label>Name</label>
-        <input type="text" id="custName" required>
-        <label>Number</label>
-        <input type="text" id="custNumber" required>
-        <label>IMEI</label>
-        <input type="text" id="custIMEI" required>
-        <label>Date</label>
-        <input type="date" id="custDate" required>
-        <label>Offer</label>
-        <input type="text" id="custOffer">
-        <label>Receipt Picture</label>
-        <input type="file" id="custReceipt" accept="image/*">
-        <button type="submit">Add Entry</button>
-        <button type="button" onclick="logout()">Logout</button>
-      </form>
+      <label>Model:</label>
+      <input type="text" id="model" placeholder="Enter Model" required />
 
-      <table id="dataTable">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Number</th>
-            <th>IMEI</th>
-            <th>Date</th>
-            <th>Offer</th>
-            <th>Receipt</th>
-            <th>Promoter</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </div>
+      <label>Rating (1–10):</label>
+      <select id="rating" required>
+        <option value="">Select Rating</option>
+        ${Array.from({length:10},(_,i)=>`<option>${i+1}</option>`).join("")}
+      </select>
+
+      <label>Feedback Type:</label>
+      <select id="type" required>
+        <option value="">Select Type</option>
+        <option>Complaint</option>
+        <option>Appreciation</option>
+      </select>
+
+      <label>Category:</label>
+      <select id="category" required>
+        <option value="">Select Category</option>
+        <option>Battery</option>
+        <option>Camera</option>
+        <option>Performance</option>
+        <option>Design</option>
+        <option>Display</option>
+        <option>Other</option>
+      </select>
+
+      <label>Comment:</label>
+      <textarea id="comment" required></textarea>
+
+      <button type="submit">Submit Feedback</button>
+    </form>
+
+    <canvas id="feedbackChart"></canvas>
+    <div id="feedbackList"></div>
   </div>
 
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
-
   <script>
-    // 🔹 Firebase Config
-    const firebaseConfig = {
-      apiKey: "AIzaSyCQyyaaoa-QIjPQ9UfHJXEwWAfCKPKc-u0",
-      authDomain: "customer-follow-up-7ab17.firebaseapp.com",
-      projectId: "customer-follow-up-7ab17",
-      storageBucket: "customer-follow-up-7ab17.appspot.com",
-      messagingSenderId: "350957822054",
-      appId: "1:350957822054:web:c5a3aca9deacebbe050da7",
-      measurementId: "G-08FJBE5F17"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.firestore();
-    const storage = firebase.storage();
+    const form = document.getElementById("feedbackForm");
+    const feedbackList = document.getElementById("feedbackList");
+    const ctx = document.getElementById("feedbackChart").getContext("2d");
 
-    // 🔹 Auth state listener (decide what to show)
-    auth.onAuthStateChanged(user=>{
-      if(user){
-        document.getElementById("loginSection").style.display="none";
-        document.getElementById("appSection").style.display="block";
-        loadEntries(user.email);
-      } else {
-        document.getElementById("loginSection").style.display="block";
-        document.getElementById("appSection").style.display="none";
-      }
-    });
+    let feedbackData = JSON.parse(localStorage.getItem("feedbacks")) || [];
 
-    // 🔹 Login / Signup
-    function login(){
-      const email=document.getElementById("loginEmail").value;
-      const pass=document.getElementById("loginPassword").value;
-      auth.signInWithEmailAndPassword(email,pass).catch(e=>alert(e.message));
+    function updateChart() {
+      const categories = [...new Set(feedbackData.map(f => f.category))];
+      const averages = categories.map(cat => {
+        const catData = feedbackData.filter(f => f.category === cat);
+        const avg = catData.reduce((a,b)=>a+parseInt(b.rating),0) / catData.length;
+        return avg.toFixed(1);
+      });
+
+      if (window.feedbackChart) window.feedbackChart.destroy();
+      window.feedbackChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: categories,
+          datasets: [{
+            label: 'Average Rating',
+            data: averages,
+            backgroundColor: '#007bff'
+          }]
+        },
+        options: { scales: { y: { beginAtZero:true, max:10 } } }
+      });
     }
-    function signup(){
-      const email=document.getElementById("loginEmail").value;
-      const pass=document.getElementById("loginPassword").value;
-      auth.createUserWithEmailAndPassword(email,pass)
-        .then(()=>alert("Signup success! Now login."))
-        .catch(e=>alert(e.message));
-    }
-    function logout(){ auth.signOut(); }
 
-    // 🔹 Add Entry
-    document.getElementById("entryForm").addEventListener("submit", async (e)=>{
+    function renderFeedback() {
+      feedbackList.innerHTML = "";
+      feedbackData.forEach(f => {
+        const div = document.createElement("div");
+        div.className = "feedback-item";
+        div.innerHTML = `<strong>${f.name}</strong> (${f.brand} ${f.model})<br>
+                         Rating: ${f.rating}/10 | ${f.type} - ${f.category}<br>
+                         ${f.comment}`;
+        feedbackList.appendChild(div);
+      });
+    }
+
+    form.addEventListener("submit", e => {
       e.preventDefault();
-      try {
-        const name=document.getElementById("custName").value;
-        const number=document.getElementById("custNumber").value;
-        const imei=document.getElementById("custIMEI").value;
-        const date=document.getElementById("custDate").value;
-        const offer=document.getElementById("custOffer").value;
-        const receipt=document.getElementById("custReceipt").files[0];
-        const user=auth.currentUser;
-        if(!user){alert("Login first!");return;}
-        let receiptUrl="",receiptPath="";
-        if(receipt){
-          const ref=storage.ref("receipts/"+Date.now()+"_"+receipt.name);
-          await ref.put(receipt);
-          receiptUrl=await ref.getDownloadURL();
-          receiptPath=ref.fullPath;
-        }
-        await db.collection("customers").add({
-          name, number, imei, date, offer, promoter:user.email,
-          receiptUrl, receiptPath,
-          createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        e.target.reset();
-      } catch(err){
-        alert("Error adding entry: "+err.message);
-      }
+      const newFeedback = {
+        name: document.getElementById("name").value,
+        brand: document.getElementById("brand").value,
+        model: document.getElementById("model").value,
+        rating: document.getElementById("rating").value,
+        type: document.getElementById("type").value,
+        category: document.getElementById("category").value,
+        comment: document.getElementById("comment").value
+      };
+      feedbackData.push(newFeedback);
+      localStorage.setItem("feedbacks", JSON.stringify(feedbackData));
+      renderFeedback();
+      updateChart();
+      form.reset();
     });
 
-    // 🔹 Load Entries
-    function loadEntries(userEmail){
-      const tbody=document.querySelector("#dataTable tbody");
-      try {
-        db.collection("customers")
-          .where("promoter","==",userEmail)
-          .orderBy("createdAt","desc")
-          .onSnapshot(snapshot=>{
-            tbody.innerHTML="";
-            snapshot.forEach(doc=>{
-              const data=doc.data();
-              const link=data.receiptUrl
-                ? `<a class="view-link" href="${data.receiptUrl}" target="_blank">📷 View</a>`
-                : `<span class="muted">—</span>`;
-              const row=`<tr>
-                <td>${data.name||""}</td>
-                <td>${data.number||""}</td>
-                <td>${data.imei||""}</td>
-                <td>${data.date||""}</td>
-                <td>${data.offer||""}</td>
-                <td>${link}</td>
-                <td>${data.promoter||""}</td>
-              </tr>`;
-              tbody.insertAdjacentHTML("beforeend",row);
-            });
-          },err=>{
-            alert("Firestore load failed: "+err.message);
-          });
-      } catch(err){
-        alert("Error loading entries: "+err.message);
-      }
-    }
+    // Initialize
+    renderFeedback();
+    if (feedbackData.length) updateChart();
   </script>
 </body>
 </html>
