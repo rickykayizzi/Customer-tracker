@@ -29,10 +29,9 @@
       <label>Customer Name:</label>
       <input type="text" id="name" required />
 
-      <label>Brand/Model:</label>
+      <label>Brand:</label>
       <select id="brand" required>
-        <option value="">Select Brand/Model</option>
-        <option>ZTE</option>
+        <option value="">Select Brand</option>
         <option>Samsung</option>
         <option>Infinix</option>
         <option>Tecno</option>
@@ -44,12 +43,20 @@
         <option>Phillips</option>
         <option>Vivo</option>
         <option>iPhone</option>
+        <option>ZTE</option>
       </select>
 
-      <label>Rating (1–10):</label>
+      <label>Model:</label>
+      <select id="model" required>
+        <option value="">Select Model</option>
+      </select>
+
+      <label>Rating:</label>
+      <div>
+        <button type="button" id="toggleRating">Switch to Statements</button>
+      </div>
       <select id="rating" required>
         <option value="">Select Rating</option>
-        ${Array.from({length:10},(_,i)=>`<option>${i+1}</option>`).join("")}
       </select>
 
       <label>Feedback Type:</label>
@@ -88,8 +95,71 @@
     const form = document.getElementById("feedbackForm");
     const feedbackList = document.getElementById("feedbackList");
     const ctx = document.getElementById("feedbackChart").getContext("2d");
+    const brandSelect = document.getElementById("brand");
+    const modelSelect = document.getElementById("model");
+    const ratingSelect = document.getElementById("rating");
+    const toggleBtn = document.getElementById("toggleRating");
 
     let feedbackData = JSON.parse(localStorage.getItem("feedbacks")) || [];
+    let useStatements = false;
+
+    const brandModels = {
+      "Samsung": ["A14", "S23", "Note 20", "M33"],
+      "Infinix": ["Hot 12", "Note 30", "Zero Ultra"],
+      "Tecno": ["Spark 10", "Camon 20", "Phantom X2"],
+      "Itel": ["P38", "S23", "A60"],
+      "Redmi": ["Note 12", "Note 13 Pro", "9A"],
+      "Poco": ["X5", "M4 Pro", "F5"],
+      "Benco": ["V80", "Y11", "S1"],
+      "Realme": ["Narzo 50", "C55", "GT Neo"],
+      "Phillips": ["S318", "Xenium V787"],
+      "Vivo": ["Y16", "V25", "X90"],
+      "iPhone": ["11", "12", "13", "14 Pro", "15 Pro Max"],
+      "ZTE": ["Blade A31", "Axon 40"]
+    };
+
+    const ratingNumbers = Array.from({length:10},(_,i)=>`${i+1}`);
+    const ratingStatements = [
+      "1 - Very Bad",
+      "2 - Bad",
+      "3 - Poor",
+      "4 - Below Average",
+      "5 - Average",
+      "6 - Fair",
+      "7 - Good",
+      "8 - Very Good",
+      "9 - Excellent",
+      "10 - Outstanding"
+    ];
+
+    function loadRatingOptions() {
+      ratingSelect.innerHTML = "<option value=''>Select Rating</option>";
+      const options = useStatements ? ratingStatements : ratingNumbers;
+      options.forEach(opt => {
+        const option = document.createElement("option");
+        option.value = opt.split(" ")[0]; // first number
+        option.textContent = opt;
+        ratingSelect.appendChild(option);
+      });
+    }
+
+    brandSelect.addEventListener("change", () => {
+      modelSelect.innerHTML = "<option value=''>Select Model</option>";
+      if (brandModels[brandSelect.value]) {
+        brandModels[brandSelect.value].forEach(m => {
+          const option = document.createElement("option");
+          option.value = m;
+          option.textContent = m;
+          modelSelect.appendChild(option);
+        });
+      }
+    });
+
+    toggleBtn.addEventListener("click", () => {
+      useStatements = !useStatements;
+      toggleBtn.textContent = useStatements ? "Switch to Numbers" : "Switch to Statements";
+      loadRatingOptions();
+    });
 
     function updateChart() {
       const categories = [...new Set(feedbackData.map(f => f.category))];
@@ -119,7 +189,7 @@
       feedbackData.forEach(f => {
         const div = document.createElement("div");
         div.className = "feedback-item";
-        div.innerHTML = `<strong>${f.name}</strong> (${f.brand})<br>
+        div.innerHTML = `<strong>${f.name}</strong> (${f.brand} ${f.model})<br>
                          Rating: ${f.rating}/10 | ${f.type} - ${f.category}<br>
                          ${f.comment}`;
         feedbackList.appendChild(div);
@@ -130,7 +200,8 @@
       e.preventDefault();
       const newFeedback = {
         name: document.getElementById("name").value,
-        brand: document.getElementById("brand").value,
+        brand: brandSelect.value,
+        model: modelSelect.value,
         rating: document.getElementById("rating").value,
         type: document.getElementById("type").value,
         category: document.getElementById("category").value,
@@ -144,6 +215,7 @@
     });
 
     // Initialize
+    loadRatingOptions();
     renderFeedback();
     if (feedbackData.length) updateChart();
   </script>
