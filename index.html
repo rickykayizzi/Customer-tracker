@@ -29,18 +29,22 @@
       <label>Customer Name:</label>
       <input type="text" id="name" required />
 
-      <label>Brand:</label>
+      <label>Brand/Model:</label>
       <select id="brand" required>
-        <option value="">Select Brand</option>
+        <option value="">Select Brand/Model</option>
         <option>ZTE</option>
         <option>Samsung</option>
         <option>Infinix</option>
         <option>Tecno</option>
         <option>Itel</option>
+        <option>Redmi</option>
+        <option>Poco</option>
+        <option>Benco</option>
+        <option>Realme</option>
+        <option>Phillips</option>
+        <option>Vivo</option>
+        <option>iPhone</option>
       </select>
-
-      <label>Model:</label>
-      <input type="text" id="model" placeholder="Enter Model" required />
 
       <label>Rating (1–10):</label>
       <select id="rating" required>
@@ -63,6 +67,10 @@
         <option>Performance</option>
         <option>Design</option>
         <option>Display</option>
+        <option>Freezing</option>
+        <option>Charging</option>
+        <option>Network</option>
+        <option>Heating</option>
         <option>Other</option>
       </select>
 
@@ -111,7 +119,7 @@
       feedbackData.forEach(f => {
         const div = document.createElement("div");
         div.className = "feedback-item";
-        div.innerHTML = `<strong>${f.name}</strong> (${f.brand} ${f.model})<br>
+        div.innerHTML = `<strong>${f.name}</strong> (${f.brand})<br>
                          Rating: ${f.rating}/10 | ${f.type} - ${f.category}<br>
                          ${f.comment}`;
         feedbackList.appendChild(div);
@@ -123,7 +131,6 @@
       const newFeedback = {
         name: document.getElementById("name").value,
         brand: document.getElementById("brand").value,
-        model: document.getElementById("model").value,
         rating: document.getElementById("rating").value,
         type: document.getElementById("type").value,
         category: document.getElementById("category").value,
