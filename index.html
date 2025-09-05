@@ -1,223 +1,306 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>A ONE PHONES</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f4f4f9; }
-    #splash { position: fixed; top:0; left:0; width:100%; height:100%; background:#007bff; display:flex; align-items:center; justify-content:center; color:white; font-size:2em; font-weight:bold; animation: fadeOut 2s forwards; animation-delay:2s; z-index:1000; }
-    @keyframes fadeOut { to { opacity:0; visibility:hidden; } }
-    .container { padding: 20px; max-width: 600px; margin: auto; }
-    h2 { text-align: center; }
-    form { background: white; padding: 15px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom:20px; }
-    label { display:block; margin-top:10px; font-weight:bold; }
-    select, input, textarea, button { width:100%; padding:8px; margin-top:5px; border:1px solid #ccc; border-radius:5px; }
-    button { background:#007bff; color:white; font-weight:bold; cursor:pointer; }
-    button:hover { background:#0056b3; }
-    #feedbackList { margin-top:20px; }
-    .feedback-item { background:white; padding:10px; border-radius:5px; box-shadow:0 2px 4px rgba(0,0,0,0.1); margin-bottom:10px; }
-    canvas { background: white; padding: 10px; border-radius: 10px; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A ONE PHONES</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  body { margin:0; font-family: Arial,sans-serif; background:#f4f4f9; overflow-x:hidden; }
+  #splash { position: fixed; top:0; left:0; width:100%; height:100%; background:#007bff; display:flex; align-items:center; justify-content:center; color:white; font-size:2em; font-weight:bold; z-index:1000; }
+
+  .page { min-height:100vh; width:100%; opacity:0; pointer-events:none; position:absolute; top:0; left:0; transition:opacity 0.6s ease; }
+  .page.active { opacity:1; pointer-events:auto; position:relative; }
+
+  .container { padding:20px; max-width:900px; margin:auto; }
+  h2 { text-align:center; }
+  form { background:white; padding:15px; border-radius:10px; box-shadow:0 4px 6px rgba(0,0,0,0.1); margin-bottom:20px; }
+  label { display:block; margin-top:10px; font-weight:bold; }
+  select,input,textarea,button { width:100%; padding:8px; margin-top:5px; border:1px solid #ccc; border-radius:5px; }
+  button { background:#007bff; color:white; font-weight:bold; cursor:pointer; }
+  button:hover { background:#0056b3; }
+  #feedbackList, #adminFeedbackList { margin-top:20px; }
+  .feedback-item { background:white; padding:10px; border-radius:5px; box-shadow:0 2px 4px rgba(0,0,0,0.1); margin-bottom:10px; }
+  .reply { margin-top:8px; font-style:italic; color:green; }
+  .admin-controls button { margin-top:5px; margin-right:5px; padding:5px 10px; }
+
+  /* login split */
+  #loginArea { display:flex; gap:20px; flex-wrap:wrap; }
+  .login-box { flex:1; min-width:280px; }
+</style>
 </head>
 <body>
-  <div id="splash">A ONE PHONES</div>
-  <div class="container">
+
+<div id="splash">💦🌊 A ONE PHONES 💦🌊</div>
+
+<!-- LOGIN PAGE -->
+<section id="loginPage" class="page active">
+  <div class="container" id="loginArea">
+    <div class="login-box">
+      <h2>Customer Login</h2>
+      <form id="customerLoginForm">
+        <label>Name:</label>
+        <input type="text" id="custName" required />
+        <label>Phone Number:</label>
+        <input type="text" id="custPhone" required />
+        <button type="submit">Login</button>
+      </form>
+    </div>
+    <div class="login-box">
+      <h2>Admin Login</h2>
+      <form id="adminLoginForm">
+        <label>Password:</label>
+        <input type="password" id="adminPassword" required />
+        <label>Security Question:</label>
+        <p style="margin:5px 0;font-size:0.9em"><em>When was Vanessa day?</em></p>
+        <input type="text" id="adminSecurity" required />
+        <button type="submit">Login</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- CUSTOMER PAGE -->
+<section id="customerPage" class="page">
+  <div class="container" id="customerArea">
     <h2>Customer Feedback</h2>
     <form id="feedbackForm">
-      <label>Customer Name:</label>
-      <input type="text" id="name" required />
-
       <label>Brand:</label>
       <select id="brand" required>
         <option value="">Select Brand</option>
-        <option>Samsung</option>
-        <option>Infinix</option>
-        <option>Tecno</option>
-        <option>Itel</option>
-        <option>Redmi</option>
-        <option>Poco</option>
-        <option>Benco</option>
-        <option>Realme</option>
-        <option>Phillips</option>
-        <option>Vivo</option>
-        <option>iPhone</option>
-        <option>ZTE</option>
+        <option>Samsung</option><option>Infinix</option><option>Tecno</option>
+        <option>Itel</option><option>Redmi</option><option>Poco</option>
+        <option>Benco</option><option>Realme</option><option>Phillips</option>
+        <option>Vivo</option><option>iPhone</option><option>ZTE</option>
       </select>
-
       <label>Model:</label>
-      <select id="model" required>
-        <option value="">Select Model</option>
-      </select>
-
+      <select id="model" required><option value="">Select Model</option></select>
       <label>Rating:</label>
-      <div>
-        <button type="button" id="toggleRating">Switch to Statements</button>
-      </div>
-      <select id="rating" required>
-        <option value="">Select Rating</option>
-      </select>
-
+      <div><button type="button" id="toggleRating">Switch to Statements</button></div>
+      <select id="rating" required></select>
       <label>Feedback Type:</label>
       <select id="type" required>
         <option value="">Select Type</option>
         <option>Complaint</option>
         <option>Appreciation</option>
       </select>
-
       <label>Category:</label>
-      <select id="category" required>
-        <option value="">Select Category</option>
-        <option>Battery</option>
-        <option>Camera</option>
-        <option>Performance</option>
-        <option>Design</option>
-        <option>Display</option>
-        <option>Freezing</option>
-        <option>Charging</option>
-        <option>Network</option>
-        <option>Heating</option>
-        <option>Other</option>
-      </select>
-
+      <select id="category" required><option value="">Select Category</option></select>
       <label>Comment:</label>
       <textarea id="comment" required></textarea>
-
       <button type="submit">Submit Feedback</button>
     </form>
 
     <canvas id="feedbackChart"></canvas>
     <div id="feedbackList"></div>
+    <p style="text-align:center"><button id="customerLogout">Logout</button></p>
   </div>
+</section>
 
-  <script>
-    const form = document.getElementById("feedbackForm");
-    const feedbackList = document.getElementById("feedbackList");
-    const ctx = document.getElementById("feedbackChart").getContext("2d");
-    const brandSelect = document.getElementById("brand");
-    const modelSelect = document.getElementById("model");
-    const ratingSelect = document.getElementById("rating");
-    const toggleBtn = document.getElementById("toggleRating");
+<!-- ADMIN PAGE -->
+<section id="adminPage" class="page">
+  <div class="container" id="adminArea">
+    <h2>Admin Dashboard</h2>
+    <p style="text-align:center">
+      <button id="exportCSV">Export CSV</button>
+      <button id="exportPDF">Export PDF</button>
+    </p>
+    <div id="adminFeedbackList"></div>
+    <p style="text-align:center"><button id="adminLogout">Logout</button></p>
+  </div>
+</section>
 
-    let feedbackData = JSON.parse(localStorage.getItem("feedbacks")) || [];
-    let useStatements = false;
+<script>
+/* ---------------- SPLASH ---------------- */
+const splash = document.getElementById("splash");
+setTimeout(()=>{ splash.style.transition="all 1s"; splash.style.opacity=0; setTimeout(()=>{ splash.style.display="none"; },1000); },2000);
 
-    const brandModels = {
-      "Samsung": ["A14", "S23", "Note 20", "M33"],
-      "Infinix": ["Hot 12", "Note 30", "Zero Ultra"],
-      "Tecno": ["Spark 10", "Camon 20", "Phantom X2"],
-      "Itel": ["P38", "S23", "A60"],
-      "Redmi": ["Note 12", "Note 13 Pro", "9A"],
-      "Poco": ["X5", "M4 Pro", "F5"],
-      "Benco": ["V80", "Y11", "S1"],
-      "Realme": ["Narzo 50", "C55", "GT Neo"],
-      "Phillips": ["S318", "Xenium V787"],
-      "Vivo": ["Y16", "V25", "X90"],
-      "iPhone": ["11", "12", "13", "14 Pro", "15 Pro Max"],
-      "ZTE": ["Blade A31", "Axon 40"]
-    };
+/* ---------------- PAGE SWITCH ---------------- */
+function showPage(pageId) {
+  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+  document.getElementById(pageId).classList.add("active");
+}
 
-    const ratingNumbers = Array.from({length:10},(_,i)=>`${i+1}`);
-    const ratingStatements = [
-      "1 - Very Bad",
-      "2 - Bad",
-      "3 - Poor",
-      "4 - Below Average",
-      "5 - Average",
-      "6 - Fair",
-      "7 - Good",
-      "8 - Very Good",
-      "9 - Excellent",
-      "10 - Outstanding"
-    ];
+/* ---------------- ELEMENTS ---------------- */
+const form = document.getElementById("feedbackForm");
+const feedbackList = document.getElementById("feedbackList");
+const ctx = document.getElementById("feedbackChart").getContext("2d");
+const brandSelect = document.getElementById("brand");
+const modelSelect = document.getElementById("model");
+const ratingSelect = document.getElementById("rating");
+const toggleBtn = document.getElementById("toggleRating");
+const typeSelect = document.getElementById("type");
+const categorySelect = document.getElementById("category");
+const adminFeedbackList=document.getElementById("adminFeedbackList");
 
-    function loadRatingOptions() {
-      ratingSelect.innerHTML = "<option value=''>Select Rating</option>";
-      const options = useStatements ? ratingStatements : ratingNumbers;
-      options.forEach(opt => {
-        const option = document.createElement("option");
-        option.value = opt.split(" ")[0]; // first number
-        option.textContent = opt;
-        ratingSelect.appendChild(option);
-      });
-    }
+let feedbackData = JSON.parse(localStorage.getItem("feedbacks"))||[];
+let useStatements = false;
+const ADMIN_PASS="1234";
+const ADMIN_SECURITY="2020"; // example answer
+let currentCustomer=null;
 
-    brandSelect.addEventListener("change", () => {
-      modelSelect.innerHTML = "<option value=''>Select Model</option>";
-      if (brandModels[brandSelect.value]) {
-        brandModels[brandSelect.value].forEach(m => {
-          const option = document.createElement("option");
-          option.value = m;
-          option.textContent = m;
-          modelSelect.appendChild(option);
-        });
+/* ---------------- DATA ---------------- */
+const brandModels = {
+  "Samsung":["A05","A06","A05S","A16","A26","A56"],
+  "Infinix":["Hot 40i","Hot 50i","Hot 60i","Smart 8","Smart 9","Smart 10","Smart 10 plus","Note 40","Note 40 pro","Note 50","Hot 50 pro+","Hot 60 pro+","Hot 60 pro"],
+  "Tecno":["Spark 40","Camon 40","Pop 10"],
+  "Itel":["A50C","A50","A70","A80","City 100","S25 Ultra","A06"],
+  "Redmi":["Note 14","Note 14 Pro","A5","14C"],
+  "Poco":["C71","M6 Pro","C75"],
+  "Benco":["V80","Y11","S1"],
+  "Realme":["A5","C55","C75"],
+  "Phillips":["Essence 10","Essence 11"],
+  "Vivo":["Y16","V25","Y17s"],
+  "iPhone":["11","12","13","14 Pro","15 Pro Max"],
+  "ZTE":["Blade A35 Core","Blade A35","Blade A36","Blade A55","Blade A56","Blade A75","Nubia V60","Nubia V70","Nubia Neo 2","Nubia Flip"]
+};
+const ratingNumbers = Array.from({length:10},(_,i)=>`${i+1}`);
+const ratingStatements = ["1 - Very Bad","2 - Bad","3 - Poor","4 - Below Average","5 - Average","6 - Fair","7 - Good","8 - Very Good","9 - Excellent","10 - Outstanding"];
+const typeCategories = {
+  Complaint:["Battery","Camera","Performance","Design","Display","Freezing","Charging","Network","Heating","Other"],
+  Appreciation:["Good Battery","Good Camera","Good Performance","Good Design","Good Display","Fast Charging","Smooth Network","Cool Features","Other"]
+};
+
+/* ---------------- FUNCTIONS ---------------- */
+function loadRatingOptions(){
+  ratingSelect.innerHTML="<option value=''>Select Rating</option>";
+  (useStatements?ratingStatements:ratingNumbers).forEach(opt=>{
+    const option=document.createElement("option");
+    option.value=opt.split(" ")[0];
+    option.textContent=opt;
+    ratingSelect.appendChild(option);
+  });
+}
+
+brandSelect.addEventListener("change", ()=>{
+  modelSelect.innerHTML="<option value=''>Select Model</option>";
+  if(brandModels[brandSelect.value]){
+    brandModels[brandSelect.value].forEach(m=>{
+      const option=document.createElement("option");
+      option.value=m; option.textContent=m;
+      modelSelect.appendChild(option);
+    });
+  }
+});
+
+toggleBtn.addEventListener("click", ()=>{
+  useStatements=!useStatements;
+  toggleBtn.textContent=useStatements?"Switch to Numbers":"Switch to Statements";
+  loadRatingOptions();
+});
+
+typeSelect.addEventListener("change", ()=>{
+  const categories = typeCategories[typeSelect.value] || [];
+  categorySelect.innerHTML="<option value=''>Select Category</option>";
+  categories.forEach(c=>{ const opt=document.createElement("option"); opt.value=c; opt.textContent=c; categorySelect.appendChild(opt); });
+});
+
+function saveData(){ localStorage.setItem("feedbacks",JSON.stringify(feedbackData)); }
+
+function renderFeedback(){
+  feedbackList.innerHTML="";
+  if(!currentCustomer) return;
+  feedbackData.forEach(f=>{
+    if(!f.hidden || (f.phone===currentCustomer.phone && f.name===currentCustomer.name)){
+      const div=document.createElement("div"); div.className="feedback-item";
+      div.innerHTML=`<strong>${f.name}</strong> (${f.brand} ${f.model})<br>
+      Rating: ${f.rating}/10 | ${f.type} - ${f.category}<br>${f.comment}${f.reply?`<div class='reply'>Admin: ${f.reply}</div>`:""}`;
+      feedbackList.appendChild(div);
+      if(f.reply && f.phone===currentCustomer.phone && !f.notified){
+        alert("Admin replied to your feedback: "+f.reply);
+        f.notified=true; saveData();
       }
-    });
-
-    toggleBtn.addEventListener("click", () => {
-      useStatements = !useStatements;
-      toggleBtn.textContent = useStatements ? "Switch to Numbers" : "Switch to Statements";
-      loadRatingOptions();
-    });
-
-    function updateChart() {
-      const categories = [...new Set(feedbackData.map(f => f.category))];
-      const averages = categories.map(cat => {
-        const catData = feedbackData.filter(f => f.category === cat);
-        const avg = catData.reduce((a,b)=>a+parseInt(b.rating),0) / catData.length;
-        return avg.toFixed(1);
-      });
-
-      if (window.feedbackChart) window.feedbackChart.destroy();
-      window.feedbackChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: categories,
-          datasets: [{
-            label: 'Average Rating',
-            data: averages,
-            backgroundColor: '#007bff'
-          }]
-        },
-        options: { scales: { y: { beginAtZero:true, max:10 } } }
-      });
     }
+  });
+}
 
-    function renderFeedback() {
-      feedbackList.innerHTML = "";
-      feedbackData.forEach(f => {
-        const div = document.createElement("div");
-        div.className = "feedback-item";
-        div.innerHTML = `<strong>${f.name}</strong> (${f.brand} ${f.model})<br>
-                         Rating: ${f.rating}/10 | ${f.type} - ${f.category}<br>
-                         ${f.comment}`;
-        feedbackList.appendChild(div);
-      });
-    }
+function updateChart(){
+  const categories=[...new Set(feedbackData.filter(f=>!f.hidden).map(f=>f.category))];
+  const averages=categories.map(cat=>{
+    const catData=feedbackData.filter(f=>f.category===cat && !f.hidden);
+    const avg=catData.reduce((a,b)=>a+parseInt(b.rating),0)/catData.length;
+    return avg.toFixed(1);
+  });
+  if(window.feedbackChart) window.feedbackChart.destroy();
+  window.feedbackChart=new Chart(ctx,{type:'bar',data:{labels:categories,datasets:[{label:'Average Rating',data:averages,backgroundColor:'#007bff'}]},options:{scales:{y:{beginAtZero:true,max:10}}}});
+}
 
-    form.addEventListener("submit", e => {
-      e.preventDefault();
-      const newFeedback = {
-        name: document.getElementById("name").value,
-        brand: brandSelect.value,
-        model: modelSelect.value,
-        rating: document.getElementById("rating").value,
-        type: document.getElementById("type").value,
-        category: document.getElementById("category").value,
-        comment: document.getElementById("comment").value
-      };
-      feedbackData.push(newFeedback);
-      localStorage.setItem("feedbacks", JSON.stringify(feedbackData));
-      renderFeedback();
-      updateChart();
-      form.reset();
-    });
+function renderAdminFeedback(){
+  adminFeedbackList.innerHTML="";
+  feedbackData.forEach((f,i)=>{
+    const div=document.createElement("div"); div.className="feedback-item";
+    div.innerHTML=`<strong>${f.name}</strong> (${f.brand} ${f.model})<br>
+    Rating: ${f.rating}/10 | ${f.type} - ${f.category}<br>${f.comment}${f.reply?`<div class='reply'>Admin: ${f.reply}</div>`:""}`;
+    const controls=document.createElement("div"); controls.className="admin-controls";
+    const replyBtn=document.createElement("button"); replyBtn.textContent="Reply";
+    replyBtn.onclick=()=>{ const r=prompt("Enter reply:"); if(r){ feedbackData[i].reply=r; feedbackData[i].notified=false; saveData(); renderFeedback(); renderAdminFeedback(); } };
+    const hideBtn=document.createElement("button"); hideBtn.textContent=f.hidden?"Unhide":"Hide";
+    hideBtn.onclick=()=>{ feedbackData[i].hidden=!feedbackData[i].hidden; saveData(); renderFeedback(); renderAdminFeedback(); };
+    controls.appendChild(replyBtn); controls.appendChild(hideBtn); div.appendChild(controls); adminFeedbackList.appendChild(div);
+  });
+}
 
-    // Initialize
-    loadRatingOptions();
-    renderFeedback();
-    if (feedbackData.length) updateChart();
-  </script>
+/* ---------------- EVENTS ---------------- */
+document.getElementById("customerLoginForm").addEventListener("submit", e=>{
+  e.preventDefault();
+  currentCustomer={name:document.getElementById("custName").value,phone:document.getElementById("custPhone").value};
+  showPage("customerPage");
+  renderFeedback(); if(feedbackData.length) updateChart();
+});
+
+document.getElementById("adminLoginForm").addEventListener("submit", e=>{
+  e.preventDefault();
+  if(document.getElementById("adminPassword").value===ADMIN_PASS &&
+     document.getElementById("adminSecurity").value===ADMIN_SECURITY){
+    showPage("adminPage"); renderAdminFeedback();
+  } else alert("Wrong admin credentials!");
+});
+
+form.addEventListener("submit", e=>{
+  e.preventDefault();
+  feedbackData.push({
+    name:currentCustomer.name,
+    phone:currentCustomer.phone,
+    brand:brandSelect.value,
+    model:modelSelect.value,
+    rating:ratingSelect.value,
+    type:typeSelect.value,
+    category:categorySelect.value,
+    comment:document.getElementById("comment").value,
+    hidden:false, reply:"", notified:true
+  });
+  saveData(); renderFeedback(); updateChart(); form.reset();
+});
+
+document.getElementById("customerLogout").addEventListener("click",()=>{
+  currentCustomer=null; showPage("loginPage");
+});
+document.getElementById("adminLogout").addEventListener("click",()=>{
+  showPage("loginPage");
+});
+
+/* ---------------- EXPORT ---------------- */
+document.getElementById("exportCSV").addEventListener("click", ()=>{
+  if(!feedbackData.length){ alert("No feedback to export"); return; }
+  const rows=feedbackData.map(f=>[f.name,f.phone,f.brand,f.model,f.rating,f.type,f.category,f.comment,f.reply,f.hidden].join(','));
+  const csv="Name,Phone,Brand,Model,Rating,Type,Category,Comment,Reply,Hidden\n"+rows.join("\n");
+  const a=document.createElement("a"); a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv); a.download="feedbacks.csv"; a.click();
+});
+
+document.getElementById("exportPDF").addEventListener("click", ()=>{
+  if(!feedbackData.length){ alert("No feedback to export"); return; }
+  const { jsPDF } = window.jspdf; const doc = new jsPDF();
+  let y=10; doc.setFontSize(10);
+  feedbackData.forEach(f=>{
+    doc.text(`Name: ${f.name} | Phone: ${f.phone} | Brand: ${f.brand} | Model: ${f.model} | Rating: ${f.rating} | Type: ${f.type} | Category: ${f.category} | Comment: ${f.comment} | Reply: ${f.reply}`,10,y);
+    y+=10;
+  });
+  doc.save("feedbacks.pdf");
+});
+
+/* ---------------- INIT ---------------- */
+loadRatingOptions();
+</script>
 </body>
 </html>
