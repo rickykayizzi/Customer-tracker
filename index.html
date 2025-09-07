@@ -1,347 +1,553 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>A ONE PHONES</title>
-<link rel="preconnect" href="https://cdn.jsdelivr.net" />
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<style>
-  :root { --primary:#007bff; --primary-dark:#0056b3; --bg:#f4f4f9; --text:#222; }
-  *{box-sizing:border-box}
-  body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden}
-  #splash{position:fixed;inset:0;background:var(--primary);display:flex;align-items:center;justify-content:center;color:#fff;font-size:2em;font-weight:bold;z-index:1000}.page{min-height:100vh;width:100%;opacity:0;pointer-events:none;position:absolute;top:0;left:0;transition:opacity .6s ease} .page.active{opacity:1;pointer-events:auto;position:relative}
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>A ONE PHONES</title>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    :root { --primary:#007bff; --primary-dark:#0056b3; --bg:#f4f4f9; --text:#222; }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden}
+    #splash{position:fixed;inset:0;background:var(--primary);display:flex;align-items:center;justify-content:center;color:#fff;font-size:2em;font-weight:bold;z-index:1000}
+    .page{min-height:100vh;width:100%;opacity:0;pointer-events:none;position:absolute;top:0;left:0;transition:opacity .6s ease}
+    .page.active{opacity:1;pointer-events:auto;position:relative}
+    .container{padding:20px;max-width:1000px;margin:auto}
+    h1,h2{ text-align:center; margin:10px 0 20px }
+    form{background:#fff;padding:15px;border-radius:12px;box-shadow:0 4px 10px rgba(0,0,0,.08);margin-bottom:20px}
+    label{display:block;margin-top:10px;font-weight:bold}
+    select,input,textarea,button{width:100%;padding:10px;margin-top:6px;border:1px solid #d6d6d6;border-radius:8px;font-size:14px}
+    textarea{min-height:90px;resize:vertical}
+    button{background:var(--primary);color:#fff;font-weight:bold;cursor:pointer;border:none}
+    button:hover{background:var(--primary-dark)}
+    #feedbackList,#adminFeedbackList{margin-top:20px}
+    .feedback-item{background:#fff;padding:12px;border-radius:10px;box-shadow:0 2px 6px rgba(0,0,0,.06);margin-bottom:10px}
+    .reply{margin-top:8px;font-style:italic;color:green}
+    .admin-controls button{margin-top:8px;margin-right:6px;padding:7px 10px}
+    .muted{opacity:.7}
+    #loginArea{display:flex;gap:20px;flex-wrap:wrap}
+    .login-box{flex:1;min-width:280px}
+    .empty{padding:18px;text-align:center;color:#666}
+    #toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#222;color:#fff;padding:12px 18px;border-radius:999px;box-shadow:0 6px 16px rgba(0,0,0,.25);opacity:0;pointer-events:none;transition:opacity .3s, transform .3s;z-index:1100}
+    #toast.show{opacity:1;transform:translateX(-50%) translateY(-6px)}
 
-.container{padding:20px;max-width:1000px;margin:auto} h1,h2{ text-align:center; margin:10px 0 20px } form{background:#fff;padding:15px;border-radius:12px;box-shadow:0 4px 10px rgba(0,0,0,.08);margin-bottom:20px} label{display:block;margin-top:10px;font-weight:bold} select,input,textarea,button{width:100%;padding:10px;margin-top:6px;border:1px solid #d6d6d6;border-radius:8px;font-size:14px} textarea{min-height:90px;resize:vertical} button{background:var(--primary);color:#fff;font-weight:bold;cursor:pointer;border:none} button:hover{background:var(--primary-dark)} #feedbackList,#adminFeedbackList{margin-top:20px} .feedback-item{background:#fff;padding:12px;border-radius:10px;box-shadow:0 2px 6px rgba(0,0,0,.06);margin-bottom:10px} .reply{margin-top:8px;font-style:italic;color:green} .admin-controls button{margin-top:8px;margin-right:6px;padding:7px 10px} .muted{opacity:.7}
-
-/* login split */ #loginArea{display:flex;gap:20px;flex-wrap:wrap} .login-box{flex:1;min-width:280px}
-
-.empty{padding:18px;text-align:center;color:#666}
-
-/* toast */ #toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#222;color:#fff;padding:12px 18px;border-radius:999px;box-shadow:0 6px 16px rgba(0,0,0,.25);opacity:0;pointer-events:none;transition:opacity .3s, transform .3s;z-index:1100} #toast.show{opacity:1;transform:translateX(-50%) translateY(-6px)} </style>
-
+    /* Chat Modal */
+    #chatModal{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:1200}
+    #chatBox{background:#fff;width:95%;max-width:500px;height:80%;border-radius:12px;display:flex;flex-direction:column;overflow:hidden}
+    #chatHeader{background:var(--primary);color:#fff;padding:12px;text-align:center;font-weight:bold}
+    #chatMessages{flex:1;padding:10px;overflow-y:auto;background:#f0f0f0}
+    .msg{margin:6px 0;max-width:75%;padding:8px 12px;border-radius:18px;clear:both;word-wrap:break-word}
+    .msg.customer{background:#dcf8c6;float:right}
+    .msg.admin{background:#fff;float:left;border:1px solid #ddd}
+    #chatInput{display:flex;gap:6px;padding:10px;background:#eee}
+    #chatInput textarea{flex:1;min-height:38px;max-height:38px;resize:none;border-radius:20px;padding:8px 12px}
+    #chatInput button{width:60px;height:38px;border-radius:20px;background:var(--primary);color:#fff;font-weight:bold}
+  </style>
 </head>
-<body><div id="splash"> A ONE PHONES </div>
-<div id="toast"></div><!-- LOGIN PAGE --><section id="loginPage" class="page active">
-  <div class="container" id="loginArea">
-    <div class="login-box">
-      <h2>Customer Login</h2>
-      <form id="customerLoginForm">
-        <label for="custName">Name:</label>
-        <input type="text" id="custName" required />
-        <label for="custPhone">Phone Number:</label>
-        <input type="tel" id="custPhone" required />
-        <button type="submit">Login</button>
-      </form>
+<body>
+  <div id="splash"> A ONE PHONES </div>
+  <div id="toast"></div>
+
+  <!-- LOGIN PAGE -->
+  <section id="loginPage" class="page active">
+    <div class="container" id="loginArea">
+      <div class="login-box">
+        <h2>Customer Login</h2>
+        <form id="customerLoginForm">
+          <label for="custName">Name:</label>
+          <input type="text" id="custName" required />
+          <label for="custPhone">Phone Number:</label>
+          <input type="tel" id="custPhone" required />
+          <button type="submit">Login</button>
+        </form>
+      </div>
+      <div class="login-box">
+        <h2>Admin Login</h2>
+        <form id="adminLoginForm">
+          <label for="adminPassword">Password:</label>
+          <input type="password" id="adminPassword" required />
+          <label>Security Question:</label>
+          <p style="margin:5px 0;font-size:.9em"><em>When was Vanessa day?</em></p>
+          <input type="text" id="adminSecurity" required />
+          <button type="submit">Login</button>
+        </form>
+      </div>
     </div>
-    <div class="login-box">
-      <h2>Admin Login</h2>
-      <form id="adminLoginForm">
-        <label for="adminPassword">Password:</label>
-        <input type="password" id="adminPassword" required />
-        <label>Security Question:</label>
-        <p style="margin:5px 0;font-size:.9em"><em>When was Vanessa day?</em></p>
-        <input type="text" id="adminSecurity" required />
-        <button type="submit">Login</button>
+  </section>
+
+  <!-- CUSTOMER PAGE -->
+  <section id="customerPage" class="page">
+    <div class="container" id="customerArea">
+      <h2>Customer Feedback</h2>
+      <form id="feedbackForm">
+        <label for="brand">Brand:</label>
+        <select id="brand" required>
+          <option value="">Select Brand</option>
+          <option>Samsung</option><option>Infinix</option><option>Tecno</option>
+          <option>Itel</option><option>Redmi</option><option>Poco</option>
+          <option>Benco</option><option>Realme</option><option>Phillips</option>
+          <option>Vivo</option><option>iPhone</option><option>ZTE</option>
+        </select>
+        <label for="model">Model:</label>
+        <select id="model" required><option value="">Select Model</option></select>
+        <label>Rating:</label>
+        <div style="margin-top:6px"><button type="button" id="toggleRating" style="width:auto">Switch to Statements</button></div>
+        <select id="rating" required></select>
+        <label for="type">Feedback Type:</label>
+        <select id="type" required>
+          <option value="">Select Type</option>
+          <option>Complaint</option>
+          <option>Appreciation</option>
+        </select>
+        <label for="category">Category:</label>
+        <select id="category" required><option value="">Select Category</option></select>
+        <label for="comment">Comment:</label>
+        <textarea id="comment" required></textarea>
+        <button type="submit">Submit Feedback</button>
       </form>
+      <canvas id="feedbackChart"></canvas>
+      <div id="feedbackList"></div>
+      <p style="text-align:center"><button id="customerLogout" style="width:auto">Logout</button></p>
+    </div>
+  </section>
+
+  <!-- ADMIN PAGE -->
+  <section id="adminPage" class="page">
+    <div class="container" id="adminArea">
+      <h2>Admin Dashboard</h2>
+      <p style="text-align:center">
+        <button id="exportCSV" style="width:auto">Export CSV</button>
+        <button id="exportPDF" style="width:auto">Export PDF</button>
+      </p>
+      <canvas id="adminChart"></canvas>
+      <div id="adminFeedbackList"></div>
+      <p style="text-align:center"><button id="adminLogout" style="width:auto">Logout</button></p>
+    </div>
+  </section>
+
+  <!-- CHAT MODAL -->
+  <div id="chatModal">
+    <div id="chatBox">
+      <div id="chatHeader"></div>
+      <div id="chatMessages"></div>
+      <div id="chatInput">
+        <textarea id="chatText"></textarea>
+        <button id="chatSend">Send</button>
+      </div>
     </div>
   </div>
-</section><!-- CUSTOMER PAGE --><section id="customerPage" class="page">
-  <div class="container" id="customerArea">
-    <h2>Customer Feedback</h2>
-    <form id="feedbackForm">
-      <label for="brand">Brand:</label>
-      <select id="brand" required>
-        <option value="">Select Brand</option>
-        <option>Samsung</option><option>Infinix</option><option>Tecno</option>
-        <option>Itel</option><option>Redmi</option><option>Poco</option>
-        <option>Benco</option><option>Realme</option><option>Phillips</option>
-        <option>Vivo</option><option>iPhone</option><option>ZTE</option>
-      </select>
-      <label for="model">Model:</label>
-      <select id="model" required><option value="">Select Model</option></select>
-      <label>Rating:</label>
-      <div style="margin-top:6px"><button type="button" id="toggleRating" style="width:auto">Switch to Statements</button></div>
-      <select id="rating" required></select>
-      <label for="type">Feedback Type:</label>
-      <select id="type" required>
-        <option value="">Select Type</option>
-        <option>Complaint</option>
-        <option>Appreciation</option>
-      </select>
-      <label for="category">Category:</label>
-      <select id="category" required><option value="">Select Category</option></select>
-      <label for="comment">Comment:</label>
-      <textarea id="comment" required></textarea>
-      <button type="submit">Submit Feedback</button>
-    </form><canvas id="feedbackChart" aria-label="Average ratings by category" role="img"></canvas>
-<div id="feedbackList"></div>
-<p style="text-align:center"><button id="customerLogout" style="width:auto">Logout</button></p>
+  <script>
+  /************** ELEMENTS **************/
+  const splash = document.getElementById('splash');
+  const toastEl = document.getElementById('toast');
 
-  </div>
-</section><!-- ADMIN PAGE --><section id="adminPage" class="page">
-  <div class="container" id="adminArea">
-    <h2>Admin Dashboard</h2>
-    <p style="text-align:center">
-      <button id="exportCSV" style="width:auto">Export CSV</button>
-      <button id="exportPDF" style="width:auto">Export PDF</button>
-    </p>
-    <canvas id="adminChart" aria-label="Average ratings by category (Admin)" role="img"></canvas>
-    <div id="adminFeedbackList"></div>
-    <p style="text-align:center"><button id="adminLogout" style="width:auto">Logout</button></p>
-  </div>
-</section><script>
-/*********************** SPLASH ***********************/
-const splash = document.getElementById('splash');
-setTimeout(()=>{ splash.style.transition='all 1s'; splash.style.opacity=0; setTimeout(()=>{ splash.style.display='none'; },1000); },2000);
+  const brandSelect = document.getElementById('brand');
+  const modelSelect = document.getElementById('model');
+  const ratingSelect = document.getElementById('rating');
+  const toggleBtn = document.getElementById('toggleRating');
+  const typeSelect = document.getElementById('type');
+  const categorySelect = document.getElementById('category');
 
-/********************** PAGE SWITCH *******************/
-function showPage(pageId){
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.getElementById(pageId).classList.add('active');
-}
+  const feedbackForm = document.getElementById('feedbackForm');
+  const feedbackList = document.getElementById('feedbackList');
+  const custChartCtx = document.getElementById('feedbackChart').getContext('2d');
 
-/********************** ELEMENTS **********************/
-const form = document.getElementById('feedbackForm');
-const feedbackList = document.getElementById('feedbackList');
-const custChartCtx = document.getElementById('feedbackChart').getContext('2d');
-const adminChartCtx = document.getElementById('adminChart').getContext('2d');
-const brandSelect = document.getElementById('brand');
-const modelSelect = document.getElementById('model');
-const ratingSelect = document.getElementById('rating');
-const toggleBtn = document.getElementById('toggleRating');
-const typeSelect = document.getElementById('type');
-const categorySelect = document.getElementById('category');
-const adminFeedbackList = document.getElementById('adminFeedbackList');
-const toastEl = document.getElementById('toast');
+  const adminFeedbackList = document.getElementById('adminFeedbackList');
+  const adminChartCtx = document.getElementById('adminChart').getContext('2d');
 
-let feedbackData = JSON.parse(localStorage.getItem('feedbacks')) || [];
-let useStatements = false;
-const ADMIN_PASS = '1234';
-const ADMIN_SECURITY = '2020'; // example answer
-let currentCustomer = null;
+  const chatModal = document.getElementById('chatModal');
+  const chatHeader = document.getElementById('chatHeader');
+  const chatMessages = document.getElementById('chatMessages');
+  const chatText = document.getElementById('chatText');
+  const chatSend = document.getElementById('chatSend');
 
-/*********************** DATA *************************/
-const brandModels = {
-  'Samsung':['A05','A06','A05S','A16','A26','A56'],
-  'Infinix':['Hot 40i','Hot 50i','Hot 60i','Smart 8','Smart 9','Smart 10','Smart 10 plus','Note 40','Note 40 pro','Note 50','Hot 50 pro+','Hot 60 pro+','Hot 60 pro'],
-  'Tecno':['Spark 40','Camon 40','Pop 10'],
-  'Itel':['A50C','A50','A70','A80','City 100','S25 Ultra','A06'],
-  'Redmi':['Note 14','Note 14 Pro','A5','14C'],
-  'Poco':['C71','M6 Pro','C75'],
-  'Benco':['V80','Y11','S1'],
-  'Realme':['A5','C55','C75'],
-  'Phillips':['Essence 10','Essence 11'],
-  'Vivo':['Y16','V25','Y17s'],
-  'iPhone':['11','12','13','14 Pro','15 Pro Max'],
-  'ZTE':['Blade A35 Core','Blade A35','Blade A36','Blade A55','Blade A56','Blade A75','Nubia V60','Nubia V70','Nubia Neo 2','Nubia Flip']
-};
-const ratingNumbers = Array.from({length:10},(_,i)=>`${i+1}`);
-const ratingStatements = ['1 - Very Bad','2 - Bad','3 - Poor','4 - Below Average','5 - Average','6 - Fair','7 - Good','8 - Very Good','9 - Excellent','10 - Outstanding'];
-const typeCategories = {
-  Complaint:['Battery','Camera','Performance','Design','Display','Freezing','Charging','Network','Heating','Other'],
-  Appreciation:['Good Battery','Good Camera','Good Performance','Good Design','Good Display','Fast Charging','Smooth Network','Cool Features','Other']
-};
+  /************** STATE **************/
+  let feedbackData = JSON.parse(localStorage.getItem('feedbacks')) || [];
+  let useStatements = false;
+  let currentCustomer = null;   // {name, phone} or null
+  let activeChatId = null;      // feedback id currently chatting
+  let activeRole = null;        // 'admin' | 'customer'
 
-/********************* UTILITIES **********************/
-function showToast(msg, ms=2800){
-  toastEl.textContent = msg;
-  toastEl.classList.add('show');
-  clearTimeout(showToast._t);
-  showToast._t = setTimeout(()=>toastEl.classList.remove('show'), ms);
-}
+  const ADMIN_PASS = '1234';
+  const ADMIN_SECURITY = '2020';
 
-function loadRatingOptions(){
-  ratingSelect.innerHTML = "<option value=''>Select Rating</option>";
-  (useStatements ? ratingStatements : ratingNumbers).forEach(opt=>{
-    const option = document.createElement('option');
-    option.value = opt.split(' ')[0];
-    option.textContent = opt;
-    ratingSelect.appendChild(option);
-  });
-}
+  /************** CONSTANTS **************/
+  const brandModels = {
+    Samsung:['A05','A06','A05S','A16','A26','A56'],
+    Infinix:['Hot 40i','Hot 50i','Hot 60i','Smart 8','Smart 9','Smart 10','Smart 10 plus','Note 40','Note 40 pro','Note 50','Hot 50 pro+','Hot 60 pro+','Hot 60 pro'],
+    Tecno:['Spark 40','Camon 40','Pop 10'],
+    Itel:['A50C','A50','A70','A80','City 100','S25 Ultra','A06'],
+    Redmi:['Note 14','Note 14 Pro','A5','14C'],
+    Poco:['C71','M6 Pro','C75'],
+    Benco:['V80','Y11','S1'],
+    Realme:['A5','C55','C75'],
+    Phillips:['Essence 10','Essence 11'],
+    Vivo:['Y16','V25','Y17s'],
+    iPhone:['11','12','13','14 Pro','15 Pro Max'],
+    ZTE:['Blade A35 Core','Blade A35','Blade A36','Blade A55','Blade A56','Blade A75','Nubia V60','Nubia V70','Nubia Neo 2','Nubia Flip']
+  };
+  const ratingNumbers = Array.from({length:10}, (_,i)=>`${i+1}`);
+  const ratingStatements = [
+    '1 - Very Bad','2 - Bad','3 - Poor','4 - Below Average','5 - Average',
+    '6 - Fair','7 - Good','8 - Very Good','9 - Excellent','10 - Outstanding'
+  ];
+  const typeCategories = {
+    Complaint:['Battery','Camera','Performance','Design','Display','Freezing','Charging','Network','Heating','Other'],
+    Appreciation:['Good Battery','Good Camera','Good Performance','Good Design','Good Display','Fast Charging','Smooth Network','Cool Features','Other']
+  };
 
-function saveData(){ localStorage.setItem('feedbacks', JSON.stringify(feedbackData)); }
-
-/********************* RENDERING **********************/
-function renderFeedback(){
-  feedbackList.innerHTML = '';
-  if(!currentCustomer){ return; }
-  const visible = feedbackData.filter(f=>!f.hidden || (f.phone===currentCustomer.phone && f.name===currentCustomer.name));
-  if(!visible.length){
-    const empty = document.createElement('div');
-    empty.className='empty';
-    empty.textContent='No feedback submitted yet.';
-    feedbackList.appendChild(empty);
-    return;
+  /************** HELPERS **************/
+  function showToast(msg, ms=2600){
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    clearTimeout(showToast._t);
+    showToast._t = setTimeout(()=>toastEl.classList.remove('show'), ms);
   }
-  visible.forEach(f=>{
-    const div = document.createElement('div');
-    div.className = 'feedback-item';
-    div.innerHTML = `<strong>${escapeHtml(f.name)}</strong> (${escapeHtml(f.brand)} ${escapeHtml(f.model)})<br>
-      Rating: ${escapeHtml(f.rating)}/10 | ${escapeHtml(f.type)} - ${escapeHtml(f.category)}<br>${escapeHtml(f.comment)}${f.reply?`<div class='reply'>Admin: ${escapeHtml(f.reply)}</div>`:''}`;
-    feedbackList.appendChild(div);
-    if(f.reply && f.phone===currentCustomer.phone && !f.notified){
-      showToast('Admin replied: '+f.reply);
-      f.notified = true; saveData();
+  function saveData(){ localStorage.setItem('feedbacks', JSON.stringify(feedbackData)); }
+  function uid(){ return 'f_'+Math.random().toString(36).slice(2,10)+Date.now().toString(36); }
+  function escapeHtml(str){
+    return String(str ?? '').replace(/[&<>"]/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[s]));
+  }
+
+  function showPage(id){
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+  }
+
+  function loadRatingOptions(){
+    ratingSelect.innerHTML = "<option value=''>Select Rating</option>";
+    (useStatements ? ratingStatements : ratingNumbers).forEach(opt=>{
+      const o = document.createElement('option');
+      o.value = opt.split(' ')[0];
+      o.textContent = opt;
+      ratingSelect.appendChild(o);
+    });
+  }
+
+  /************** CHAT **************/
+  function openChatModal(feedbackId, role, phone){
+    activeChatId = feedbackId;
+    activeRole = role;
+    chatHeader.textContent = `Chat – ${phone}`;
+    chatModal.style.display = 'flex';
+    renderChat();
+  }
+  function closeChatModal(){
+    chatModal.style.display = 'none';
+    activeChatId = null;
+    activeRole = null;
+    chatMessages.innerHTML = '';
+    chatText.value = '';
+  }
+  window.closeChatModal = closeChatModal; // header close button uses this
+
+  function renderChat(){
+    chatMessages.innerHTML = '';
+    const fb = feedbackData.find(f => f.id === activeChatId);
+    if(!fb) return;
+    const msgs = fb.chat || [];
+    msgs.forEach(m=>{
+      const b = document.createElement('div');
+      b.className = 'msg ' + (m.from === 'admin' ? 'admin' : 'customer');
+      b.textContent = m.text;
+      chatMessages.appendChild(b);
+    });
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+
+  /************** RENDERING **************/
+  function renderCustomerFeedback(){
+    feedbackList.innerHTML = '';
+    if(!currentCustomer){ return; }
+
+    // IMPORTANT: hidden feedback is not shown to customer at all (so hidden also hides chats)
+    const visible = feedbackData.filter(f => !f.hidden);
+
+    if(!visible.length){
+      const e = document.createElement('div');
+      e.className = 'empty';
+      e.textContent = 'No feedback submitted yet.';
+      feedbackList.appendChild(e);
+      return;
+    }
+
+    visible.forEach(f=>{
+      const card = document.createElement('div');
+      card.className = 'feedback-item';
+      card.innerHTML = `
+        <strong>${escapeHtml(f.name)}</strong> (${escapeHtml(f.brand)} ${escapeHtml(f.model)})<br>
+        Rating: ${escapeHtml(f.rating)}/10 | ${escapeHtml(f.type)} - ${escapeHtml(f.category)}<br>
+        ${escapeHtml(f.comment)}
+      `;
+
+      // Only show "Open Chat" to the owner of this feedback
+      if(currentCustomer && f.phone === currentCustomer.phone){
+        const actions = document.createElement('div');
+        const chatBtn = document.createElement('button');
+        chatBtn.textContent = 'Open Chat';
+        chatBtn.style.marginTop = '8px';
+        chatBtn.onclick = () => openChatModal(f.id, 'customer', f.phone);
+        actions.appendChild(chatBtn);
+        card.appendChild(actions);
+      }
+
+      feedbackList.appendChild(card);
+    });
+  }
+
+  function renderAdminFeedback(){
+    adminFeedbackList.innerHTML = '';
+    if(!feedbackData.length){
+      const e = document.createElement('div');
+      e.className = 'empty';
+      e.textContent = 'No feedback in the system yet.';
+      adminFeedbackList.appendChild(e);
+      return;
+    }
+
+    feedbackData.forEach((f, i)=>{
+      const card = document.createElement('div');
+      card.className = 'feedback-item';
+      if(f.hidden) card.classList.add('muted');
+      card.innerHTML = `
+        <strong>${escapeHtml(f.name)}</strong> (${escapeHtml(f.brand)} ${escapeHtml(f.model)})<br>
+        Rating: ${escapeHtml(f.rating)}/10 | ${escapeHtml(f.type)} - ${escapeHtml(f.category)}<br>
+        ${escapeHtml(f.comment)}
+      `;
+
+      const controls = document.createElement('div');
+      controls.className = 'admin-controls';
+
+      const chatBtn = document.createElement('button');
+      chatBtn.textContent = 'Open Chat';
+      chatBtn.onclick = () => openChatModal(f.id, 'admin', f.phone);
+
+      const hideBtn = document.createElement('button');
+      hideBtn.textContent = f.hidden ? 'Unhide' : 'Hide';
+      hideBtn.onclick = ()=>{
+        feedbackData[i].hidden = !feedbackData[i].hidden;
+        saveData();
+        renderCustomerFeedback(); // hide should affect what customer can see
+        renderAdminFeedback();
+        updateCharts();
+      };
+
+      controls.appendChild(chatBtn);
+      controls.appendChild(hideBtn);
+      card.appendChild(controls);
+      adminFeedbackList.appendChild(card);
+    });
+  }
+
+  /************** CHARTS **************/
+  function computeCategoryAverages(){
+    const visible = feedbackData.filter(f => !f.hidden);
+    const cats = [...new Set(visible.map(f => f.category))];
+    const averages = cats.map(cat=>{
+      const subset = visible.filter(f => f.category === cat);
+      const avg = subset.reduce((a,b)=> a + Number(b.rating || 0), 0) / (subset.length || 1);
+      return Number.isFinite(avg) ? Number(avg.toFixed(1)) : 0;
+    });
+    return { cats, averages };
+  }
+
+  function buildChart(ctx, key){
+    const { cats, averages } = computeCategoryAverages();
+    if(!window[key]){
+      window[key] = new Chart(ctx, {
+        type:'bar',
+        data:{ labels: cats, datasets:[{ label:'Average Rating', data: averages }] },
+        options:{ scales:{ y:{ beginAtZero:true, max:10 } } }
+      });
+    }else{
+      window[key].data.labels = cats;
+      window[key].data.datasets[0].data = averages;
+      window[key].update();
+    }
+  }
+
+  function updateCharts(){
+    buildChart(custChartCtx, 'custChartInst');
+    buildChart(adminChartCtx, 'adminChartInst');
+  }
+  /************** EVENTS **************/
+  // Brand → models
+  brandSelect.addEventListener('change', ()=>{
+    modelSelect.innerHTML = "<option value=''>Select Model</option>";
+    (brandModels[brandSelect.value] || []).forEach(m=>{
+      const opt = document.createElement('option');
+      opt.value = m; opt.textContent = m;
+      modelSelect.appendChild(opt);
+    });
+  });
+
+  // Toggle rating mode
+  toggleBtn.addEventListener('click', ()=>{
+    useStatements = !useStatements;
+    toggleBtn.textContent = useStatements ? 'Switch to Numbers' : 'Switch to Statements';
+    loadRatingOptions();
+  });
+
+  // Type → categories
+  typeSelect.addEventListener('change', ()=>{
+    const cats = typeCategories[typeSelect.value] || [];
+    categorySelect.innerHTML = "<option value=''>Select Category</option>";
+    cats.forEach(c=>{
+      const opt = document.createElement('option');
+      opt.value = c; opt.textContent = c;
+      categorySelect.appendChild(opt);
+    });
+  });
+
+  // Customer login
+  document.getElementById('customerLoginForm').addEventListener('submit', (e)=>{
+    e.preventDefault();
+    currentCustomer = {
+      name: document.getElementById('custName').value.trim(),
+      phone: document.getElementById('custPhone').value.trim()
+    };
+    showPage('customerPage');
+    renderCustomerFeedback();
+    if(feedbackData.length) updateCharts();
+    showToast('Welcome!');
+  });
+
+  // Admin login
+  document.getElementById('adminLoginForm').addEventListener('submit', (e)=>{
+    e.preventDefault();
+    const pass = document.getElementById('adminPassword').value;
+    const sec = document.getElementById('adminSecurity').value.trim().toLowerCase();
+    if(pass === ADMIN_PASS && sec === ADMIN_SECURITY.toLowerCase()){
+      showPage('adminPage');
+      renderAdminFeedback();
+      if(feedbackData.length) updateCharts();
+      showToast('Admin logged in');
+    }else{
+      alert('Wrong admin credentials!');
     }
   });
-}
 
-function renderAdminFeedback(){
-  adminFeedbackList.innerHTML = '';
-  if(!feedbackData.length){
-    const empty = document.createElement('div');
-    empty.className='empty';
-    empty.textContent='No feedback in the system yet.';
-    adminFeedbackList.appendChild(empty);
-  }
-  feedbackData.forEach((f,i)=>{
-    const div = document.createElement('div'); div.className='feedback-item';
-    div.innerHTML = `<strong>${escapeHtml(f.name)}</strong> (${escapeHtml(f.brand)} ${escapeHtml(f.model)})<br>
-    Rating: ${escapeHtml(f.rating)}/10 | ${escapeHtml(f.type)} - ${escapeHtml(f.category)}<br>${escapeHtml(f.comment)}${f.reply?`<div class='reply'>Admin: ${escapeHtml(f.reply)}</div>`:''}`;
-    const controls = document.createElement('div'); controls.className='admin-controls';
-    const replyBtn = document.createElement('button'); replyBtn.textContent = 'Reply';
-    replyBtn.onclick = ()=>{ const r = prompt('Enter reply:'); if(r){ feedbackData[i].reply = r; feedbackData[i].notified = false; saveData(); renderFeedback(); renderAdminFeedback(); updateCharts(); } };
-    const hideBtn = document.createElement('button'); hideBtn.textContent = f.hidden ? 'Unhide' : 'Hide';
-    hideBtn.onclick = ()=>{ feedbackData[i].hidden = !feedbackData[i].hidden; saveData(); renderFeedback(); renderAdminFeedback(); updateCharts(); };
-    controls.appendChild(replyBtn); controls.appendChild(hideBtn); div.appendChild(controls); adminFeedbackList.appendChild(div);
+  // Feedback submit
+  feedbackForm.addEventListener('submit', (e)=>{
+    e.preventDefault();
+    const lastBrand = brandSelect.value;
+    const lastModel = modelSelect.value;
+
+    const rec = {
+      id: uid(),
+      name: currentCustomer?.name || 'Anonymous',
+      phone: currentCustomer?.phone || '',
+      brand: brandSelect.value,
+      model: modelSelect.value,
+      rating: ratingSelect.value,
+      type: typeSelect.value,
+      category: categorySelect.value,
+      comment: document.getElementById('comment').value,
+      hidden: false,
+      chat: []  // chat thread
+    };
+    feedbackData.push(rec);
+    saveData();
+
+    renderCustomerFeedback();
+    renderAdminFeedback();
+    updateCharts();
+    feedbackForm.reset();
+    // keep last selected brand/model for convenience
+    brandSelect.value = lastBrand;
+    brandSelect.dispatchEvent(new Event('change'));
+    modelSelect.value = lastModel;
+    loadRatingOptions();
+    typeSelect.value = '';
+    categorySelect.innerHTML = "<option value=''>Select Category</option>";
+    showToast('Feedback submitted. Thank you!');
   });
-}
 
-/*********************** CHARTS ***********************/
-function computeCategoryAverages(){
-  const visible = feedbackData.filter(f=>!f.hidden);
-  const cats = [...new Set(visible.map(f=>f.category))];
-  const averages = cats.map(cat=>{
-    const catData = visible.filter(f=>f.category===cat);
-    const avg = catData.reduce((a,b)=>a + Number(b.rating || 0), 0) / (catData.length || 1);
-    return Number.isFinite(avg) ? Number(avg.toFixed(1)) : 0;
+  // Logouts
+  document.getElementById('customerLogout').addEventListener('click', ()=>{
+    currentCustomer = null;
+    showPage('loginPage');
   });
-  return { cats, averages };
-}
-
-function buildChart(ctx, stateKey){
-  const { cats, averages } = computeCategoryAverages();
-  if(!window[stateKey]){ window[stateKey] = new Chart(ctx, { type:'bar', data:{ labels:cats, datasets:[{ label:'Average Rating', data:averages }] }, options:{ scales:{ y:{ beginAtZero:true, max:10 } }, plugins:{ legend:{ display:true } }, animation:false } }); }
-  else { window[stateKey].data.labels = cats; window[stateKey].data.datasets[0].data = averages; window[stateKey].update(); }
-}
-
-function updateCharts(){
-  buildChart(custChartCtx, 'feedbackChartInstance');
-  buildChart(adminChartCtx, 'adminChartInstance');
-}
-
-/*********************** EVENTS ***********************/
-brandSelect.addEventListener('change', ()=>{
-  modelSelect.innerHTML = "<option value=''>Select Model</option>";
-  (brandModels[brandSelect.value]||[]).forEach(m=>{
-    const option=document.createElement('option'); option.value=m; option.textContent=m; modelSelect.appendChild(option);
+  document.getElementById('adminLogout').addEventListener('click', ()=>{
+    showPage('loginPage');
   });
-});
 
-toggleBtn.addEventListener('click', ()=>{
-  useStatements = !useStatements;
-  toggleBtn.textContent = useStatements ? 'Switch to Numbers' : 'Switch to Statements';
+  // Chat send
+  chatSend.addEventListener('click', ()=>{
+    const txt = chatText.value.trim();
+    if(!txt || !activeChatId || !activeRole) return;
+    const fb = feedbackData.find(f => f.id === activeChatId);
+    if(!fb) return;
+    if(!fb.chat) fb.chat = [];
+    fb.chat.push({ from: activeRole, text: txt, t: Date.now() });
+    chatText.value = '';
+    saveData();
+    renderChat();
+  });
+
+  // Allow Enter to send (Shift+Enter for newline)
+  chatText.addEventListener('keydown', (e)=>{
+    if(e.key === 'Enter' && !e.shiftKey){
+      e.preventDefault();
+      chatSend.click();
+    }
+  });
+
+  // Export CSV
+  document.getElementById('exportCSV').addEventListener('click', ()=>{
+    if(!feedbackData.length){ alert('No feedback to export'); return; }
+    const header = ['ID','Name','Phone','Brand','Model','Rating','Type','Category','Comment','Hidden'];
+    const rows = feedbackData.map(f=>[
+      f.id, f.name, f.phone, f.brand, f.model, f.rating, f.type, f.category, f.comment, f.hidden
+    ].map(v=>{
+      const s = String(v ?? '');
+      return /[",\n]/.test(s) ? `"${s.replace(/"/g,'""')}"` : s;
+    }).join(','));
+    const csv = header.join(',') + '\n' + rows.join('\n');
+    const a = document.createElement('a');
+    a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+    a.download = 'feedbacks.csv';
+    a.click();
+  });
+
+  // Export PDF (basic line wrap)
+  document.getElementById('exportPDF').addEventListener('click', ()=>{
+    if(!feedbackData.length){ alert('No feedback to export'); return; }
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    const MARGIN_X = 10, MAX_W = 190, LINE_H = 6, BOTTOM = 285;
+    let y = 12;
+
+    doc.setFontSize(12);
+    doc.text('A ONE PHONES — Feedback Export', MARGIN_X, y);
+    y += 8;
+    doc.setFontSize(10);
+
+    feedbackData.forEach(f=>{
+      const raw = `ID:${f.id} | Name:${f.name} | Phone:${f.phone} | Brand:${f.brand} | Model:${f.model} | Rating:${f.rating} | Type:${f.type} | Category:${f.category} | Comment:${f.comment} | Hidden:${f.hidden ? 'Yes' : 'No'}`;
+      const lines = doc.splitTextToSize(raw, MAX_W);
+      if(y + lines.length * LINE_H > BOTTOM){ doc.addPage(); y = 12; }
+      doc.text(lines, MARGIN_X, y);
+      y += lines.length * LINE_H + 4;
+    });
+
+    doc.save('feedbacks.pdf');
+  });
+
+  /************** INIT **************/
+  // Splash fade out
+  setTimeout(()=>{
+    splash.style.transition = 'all 1s';
+    splash.style.opacity = 0;
+    setTimeout(()=>{ splash.style.display='none'; }, 1000);
+  }, 1800);
+
   loadRatingOptions();
-});
-
-typeSelect.addEventListener('change', ()=>{
-  const categories = typeCategories[typeSelect.value] || [];
-  categorySelect.innerHTML = "<option value=''>Select Category</option>";
-  categories.forEach(c=>{ const opt=document.createElement('option'); opt.value=c; opt.textContent=c; categorySelect.appendChild(opt); });
-});
-
-function escapeCsv(val){
-  const s = String(val ?? '');
-  if(/[",\n]/.test(s)) return '"'+s.replace(/"/g,'""')+'"';
-  return s;
-}
-
-function escapeHtml(str){
-  return String(str ?? '').replace(/[&<>"]/g, s=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[s]));
-}
-
-/* Logins */
-document.getElementById('customerLoginForm').addEventListener('submit', e=>{
-  e.preventDefault();
-  currentCustomer = { name: document.getElementById('custName').value.trim(), phone: document.getElementById('custPhone').value.trim() };
-  showPage('customerPage');
-  renderFeedback();
-  if(feedbackData.length) updateCharts();
-});
-
-document.getElementById('adminLoginForm').addEventListener('submit', e=>{
-  e.preventDefault();
-  const passOk = document.getElementById('adminPassword').value === ADMIN_PASS;
-  const secOk = document.getElementById('adminSecurity').value.trim().toLowerCase() === ADMIN_SECURITY.trim().toLowerCase();
-  if(passOk && secOk){
-    showPage('adminPage'); renderAdminFeedback(); updateCharts();
-  } else {
-    alert('Wrong admin credentials!');
+  if(feedbackData.length){
+    try{ updateCharts(); }catch(_){}
   }
-});
-
-/* Feedback submit */
-form.addEventListener('submit', e=>{
-  e.preventDefault();
-  const lastBrand = brandSelect.value; const lastModel = modelSelect.value;
-  feedbackData.push({
-    name: currentCustomer.name,
-    phone: currentCustomer.phone,
-    brand: brandSelect.value,
-    model: modelSelect.value,
-    rating: ratingSelect.value,
-    type: typeSelect.value,
-    category: categorySelect.value,
-    comment: document.getElementById('comment').value,
-    hidden: false, reply: '', notified: true
-  });
-  saveData(); renderFeedback(); updateCharts();
-  form.reset();
-  // restore brand/model for convenience
-  brandSelect.value = lastBrand;
-  brandSelect.dispatchEvent(new Event('change'));
-  modelSelect.value = lastModel;
-  loadRatingOptions();
-  typeSelect.value = '';
-  categorySelect.innerHTML = "<option value=''>Select Category</option>";
-  showToast('Feedback submitted. Thank you!');
-});
-
-/* Logouts */
-document.getElementById('customerLogout').addEventListener('click',()=>{ currentCustomer=null; showPage('loginPage'); });
-document.getElementById('adminLogout').addEventListener('click',()=>{ showPage('loginPage'); });
-
-/*********************** EXPORTS **********************/
-document.getElementById('exportCSV').addEventListener('click', ()=>{
-  if(!feedbackData.length){ alert('No feedback to export'); return; }
-  const header = ['Name','Phone','Brand','Model','Rating','Type','Category','Comment','Reply','Hidden'];
-  const rows = feedbackData.map(f=>[
-    f.name, f.phone, f.brand, f.model, f.rating, f.type, f.category, f.comment, f.reply, f.hidden
-  ].map(escapeCsv).join(','));
-  const csv = header.join(',') + "\n" + rows.join("\n");
-  const a=document.createElement('a'); a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv); a.download='feedbacks.csv'; a.click();
-});
-
-// PDF with wrapping + page breaks
-const PDF_MARGIN_X = 10, PDF_MAX_W = 190, PDF_LINE_H = 6, PDF_BOTTOM = 285;
-document.getElementById('exportPDF').addEventListener('click', ()=>{
-  if(!feedbackData.length){ alert('No feedback to export'); return; }
-  const { jsPDF } = window.jspdf; const doc = new jsPDF();
-  let y = 12; doc.setFontSize(12); doc.text('A ONE PHONES – Feedback Export', PDF_MARGIN_X, y); y += 8; doc.setFontSize(10);
-  feedbackData.forEach(f=>{
-    const raw = `Name: ${f.name} | Phone: ${f.phone} | Brand: ${f.brand} | Model: ${f.model} | Rating: ${f.rating} | Type: ${f.type} | Category: ${f.category} | Comment: ${f.comment} | Reply: ${f.reply || ''}`;
-    const lines = doc.splitTextToSize(raw, PDF_MAX_W);
-    if(y + lines.length * PDF_LINE_H > PDF_BOTTOM){ doc.addPage(); y = 12; }
-    doc.text(lines, PDF_MARGIN_X, y);
-    y += lines.length * PDF_LINE_H + 4;
-  });
-  doc.save('feedbacks.pdf');
-});
-
-/************************ INIT ************************/
-loadRatingOptions();
-if(feedbackData.length){ updateCharts(); }
-</script></body>
+  </script>
+</body>
 </html>
